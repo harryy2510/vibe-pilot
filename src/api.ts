@@ -15,7 +15,10 @@ import type {
 import { log } from './logger'
 
 export class VkApi {
-	constructor(private baseUrl: string) {}
+	constructor(
+		private baseUrl: string,
+		private remoteApiBase?: string,
+	) {}
 
 	private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
 		const url = `${this.baseUrl}${path}`
@@ -40,6 +43,26 @@ export class VkApi {
 
 		// Some endpoints (health, etc.) return raw
 		return json as T
+	}
+
+	// Remote API requests go directly to VK_SHARED_API_BASE (no wrapper)
+	private async remoteRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
+		if (!this.remoteApiBase) {
+			throw new Error('Remote API base not configured — set vk_shared_api_base in config')
+		}
+		const url = `${this.remoteApiBase}${path}`
+		const res = await fetch(url, {
+			method,
+			headers: body ? { 'Content-Type': 'application/json' } : undefined,
+			body: body ? JSON.stringify(body) : undefined,
+		})
+
+		if (!res.ok) {
+			const text = await res.text().catch(() => 'no body')
+			throw new Error(`VK Remote API ${method} ${path} failed (${res.status}): ${text}`)
+		}
+
+		return res.json() as Promise<T>
 	}
 
 	// -- Health --
@@ -75,9 +98,14 @@ export class VkApi {
 		return this.request('GET', `/api/remote/project-statuses?project_id=${projectId}`)
 	}
 
-	// NOTE: Creating project statuses requires the remote API (/v1/...) with auth.
-	// The local server only proxies GET. Tags and statuses must be created via
-	// the vibe-kanban UI or remote API directly.
+	async createProjectStatus(body: {
+		project_id: string
+		name: string
+		color: string
+		sort_order: number
+	}): Promise<MutationResponse<ProjectStatus>> {
+		return this.remoteRequest('POST', '/v1/project_statuses', body)
+	}
 
 	// -- Issues --
 
@@ -128,8 +156,17 @@ export class VkApi {
 		return this.request('GET', `/api/remote/tags?project_id=${projectId}`)
 	}
 
-	// NOTE: Creating/deleting tags requires the remote API (/v1/...) with auth.
-	// The local server only proxies GET. Tags must be created via the vibe-kanban UI.
+	async createTag(body: {
+		project_id: string
+		name: string
+		color: string
+	}): Promise<MutationResponse<Tag>> {
+		return this.remoteRequest('POST', '/v1/tags', body)
+	}
+
+	async deleteTag(tagId: string): Promise<void> {
+		await this.remoteRequest('DELETE', `/v1/tags/${tagId}`)
+	}
 
 	// -- Issue Tags --
 

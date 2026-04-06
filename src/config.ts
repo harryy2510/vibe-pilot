@@ -18,6 +18,7 @@ export function loadConfig(): AutopilotConfig {
 	// Validate required fields
 	if (!config.workspace) throw new Error('Config missing "workspace"')
 	if (!config.vk_api) throw new Error('Config missing "vk_api"')
+	if (!config.vk_shared_api_base) throw new Error('Config missing "vk_shared_api_base"')
 	if (!config.org_id) throw new Error('Config missing "org_id"')
 	if (!config.models?.high?.length) throw new Error('Config missing "models.high"')
 	if (!config.models?.medium?.length) throw new Error('Config missing "models.medium"')

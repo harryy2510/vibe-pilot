@@ -25,6 +25,7 @@ export type Defaults = {
 export type AutopilotConfig = {
 	workspace: string
 	vk_api: string
+	vk_shared_api_base: string
 	org_id: string
 	scan_depth: number
 	interval: number

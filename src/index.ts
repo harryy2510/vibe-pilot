@@ -8,7 +8,7 @@ async function main() {
 	log.info('vibe-pilot starting')
 
 	const config = loadConfig()
-	const api = new VkApi(config.vk_api)
+	const api = new VkApi(config.vk_api, config.vk_shared_api_base)
 
 	log.info('Config loaded', {
 		workspace: config.workspace,

@@ -4,6 +4,18 @@ import type { AutopilotConfig, DiscoveredProject, ProjectConfig } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
 
+const TAG_COLORS: Record<string, string> = {
+	migration: '30 90% 50%',
+	brainstorm: '270 70% 60%',
+	blocked: '0 0% 50%',
+	bug: '355 65% 53%',
+	feature: '124 82% 30%',
+	enhancement: '181 72% 78%',
+	frontend: '210 80% 55%',
+	backend: '45 80% 50%',
+	setup: '200 60% 45%',
+	'status-update': '160 70% 40%',
+}
 
 export async function setupProject(
 	api: VkApi,
@@ -71,9 +83,32 @@ export async function ensureTriageStatus(api: VkApi, projectId: string): Promise
 	const triage = statuses.find(s => s.name.toLowerCase() === 'triage')
 	if (triage) return triage.id
 
-	// Cannot create statuses through local API — must be done in vibe-kanban UI
-	log.warn('Triage status not found — create it in vibe-kanban UI', { projectId })
-	return null
+	// Insert Triage between Backlog and To Do via remote API
+	const backlog = statuses.find(s => s.name.toLowerCase() === 'backlog')
+	const todo = statuses.find(s => s.name.toLowerCase() === 'to do')
+
+	let sortOrder: number
+	if (backlog && todo) {
+		sortOrder = (backlog.sort_order + todo.sort_order) / 2
+	} else if (backlog) {
+		sortOrder = backlog.sort_order + 1
+	} else {
+		sortOrder = 0.5
+	}
+
+	try {
+		const result = await api.createProjectStatus({
+			project_id: projectId,
+			name: 'Triage',
+			color: '45 85% 55%',
+			sort_order: sortOrder,
+		})
+		log.info('Created Triage status', { projectId })
+		return result.data.id
+	} catch (err) {
+		log.warn('Failed to create Triage status — create it in vibe-kanban UI', { projectId, error: String(err) })
+		return null
+	}
 }
 
 export async function ensureStandardTags(
@@ -88,10 +123,21 @@ export async function ensureStandardTags(
 		tagMap.set(tag.name.toLowerCase(), tag.id)
 	}
 
-	const missing = requiredTags.filter(t => !tagMap.has(t.toLowerCase()))
-	if (missing.length > 0) {
-		// Cannot create tags through local API — must be done in vibe-kanban UI
-		log.warn(`Missing tags — create in vibe-kanban UI: ${missing.join(', ')}`, { projectId })
+	for (const tagName of requiredTags) {
+		if (tagMap.has(tagName.toLowerCase())) continue
+
+		const color = TAG_COLORS[tagName] ?? '0 0% 60%'
+		try {
+			const result = await api.createTag({
+				project_id: projectId,
+				name: tagName,
+				color,
+			})
+			tagMap.set(tagName.toLowerCase(), result.data.id)
+			log.info(`Created tag: ${tagName}`, { projectId })
+		} catch (err) {
+			log.warn(`Failed to create tag: ${tagName}`, { projectId, error: String(err) })
+		}
 	}
 
 	return tagMap

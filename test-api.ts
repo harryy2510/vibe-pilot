@@ -2,18 +2,20 @@
  * vibe-pilot API smoke test
  * Run: bun run test-api.ts
  *
- * Tests every API call used by the autopilot against localhost:4040.
- * Creates test data, validates responses, then cleans up.
+ * Tests every API call used by the autopilot against:
+ * - Local API: localhost:4040
+ * - Remote API: VK_SHARED_API_BASE (for tag/status mutations)
  */
 
-const BASE = 'http://localhost:4040'
+const LOCAL = 'http://localhost:4040'
+const REMOTE = process.env.VK_SHARED_API_BASE ?? 'https://server-vibe.hariom.cc'
 
 type TestResult = { name: string; ok: boolean; error?: string; data?: unknown }
 const results: TestResult[] = []
 const cleanup: Array<() => Promise<void>> = []
 
-async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
-	const res = await fetch(`${BASE}${path}`, {
+async function localReq<T>(method: string, path: string, body?: unknown): Promise<T> {
+	const res = await fetch(`${LOCAL}${path}`, {
 		method,
 		headers: body ? { 'Content-Type': 'application/json' } : undefined,
 		body: body ? JSON.stringify(body) : undefined,
@@ -29,6 +31,18 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
 	return json as T
 }
 
+async function remoteReq<T>(method: string, path: string, body?: unknown): Promise<T> {
+	const res = await fetch(`${REMOTE}${path}`, {
+		method,
+		headers: body ? { 'Content-Type': 'application/json' } : undefined,
+		body: body ? JSON.stringify(body) : undefined,
+	})
+	const text = await res.text()
+	if (!res.ok) throw new Error(`REMOTE ${method} ${path} → ${res.status}: ${text}`)
+	if (!text) return null as T
+	return JSON.parse(text) as T
+}
+
 async function test(name: string, fn: () => Promise<unknown>) {
 	try {
 		const data = await fn()
@@ -41,152 +55,168 @@ async function test(name: string, fn: () => Promise<unknown>) {
 }
 
 async function main() {
-	console.log('\n━━━ vibe-pilot API smoke test ━━━\n')
+	console.log(`\n━━━ vibe-pilot API smoke test ━━━`)
+	console.log(`  Local:  ${LOCAL}`)
+	console.log(`  Remote: ${REMOTE}\n`)
 
 	// ── 1. Health ──
 	console.log('Health')
 	await test('GET /api/health', async () => {
-		const res = await fetch(`${BASE}/api/health`)
+		const res = await fetch(`${LOCAL}/api/health`)
 		if (!res.ok) throw new Error(`Status ${res.status}`)
 		return { status: res.status }
 	})
 
-	// ── 2. Organizations ──
+	// ── 2. Organizations (local proxy) ──
 	console.log('\nOrganizations')
 	let orgId = ''
 	await test('GET /api/organizations', async () => {
-		const data = await req<{ organizations: Array<{ id: string; name: string; slug: string }> }>('GET', '/api/organizations')
+		const data = await localReq<{ organizations: Array<{ id: string; name: string; slug: string }> }>('GET', '/api/organizations')
 		if (!data.organizations?.length) throw new Error('No organizations found')
 		orgId = data.organizations[0]!.id
 		return { count: data.organizations.length, first: data.organizations[0]!.name }
 	})
 	if (!orgId) { console.log('\n⚠ No org found, cannot continue.'); return printSummary() }
 
-	// ── 3. Projects ──
+	// ── 3. Projects (local proxy) ──
 	console.log('\nProjects')
 	let projectId = ''
-	let projectName = ''
 	await test('GET /api/remote/projects?organization_id=...', async () => {
-		const data = await req<{ projects: Array<{ id: string; name: string }> }>('GET', `/api/remote/projects?organization_id=${orgId}`)
+		const data = await localReq<{ projects: Array<{ id: string; name: string }> }>('GET', `/api/remote/projects?organization_id=${orgId}`)
 		if (!data.projects?.length) throw new Error('No projects found — create one in vibe-kanban UI first')
 		projectId = data.projects[0]!.id
-		projectName = data.projects[0]!.name
-		return { count: data.projects.length, first: projectName }
+		return { count: data.projects.length, first: data.projects[0]!.name }
 	})
 	if (!projectId) { console.log('\n⚠ No project found, cannot continue.'); return printSummary() }
 
 	await test('GET /api/remote/projects/{id}', async () => {
-		const data = await req<{ id: string; name: string }>('GET', `/api/remote/projects/${projectId}`)
-		return { id: data.id, name: data.name }
+		return await localReq<{ id: string; name: string }>('GET', `/api/remote/projects/${projectId}`)
 	})
 
-	// ── 4. Project Statuses (read-only via local API) ──
+	// ── 4. Project Statuses ──
 	console.log('\nProject Statuses')
 	const statusMap: Record<string, string> = {}
-	await test('GET /api/remote/project-statuses?project_id=...', async () => {
-		const data = await req<{ project_statuses: Array<{ id: string; name: string; sort_order: number }> }>('GET', `/api/remote/project-statuses?project_id=${projectId}`)
-		for (const s of data.project_statuses) {
-			statusMap[s.name.toLowerCase()] = s.id
-		}
+	await test('GET /api/remote/project-statuses (local)', async () => {
+		const data = await localReq<{ project_statuses: Array<{ id: string; name: string; sort_order: number }> }>('GET', `/api/remote/project-statuses?project_id=${projectId}`)
+		for (const s of data.project_statuses) statusMap[s.name.toLowerCase()] = s.id
 		return { count: data.project_statuses.length, statuses: data.project_statuses.map(s => s.name) }
 	})
 
-	// NOTE: POST/PUT/DELETE for project-statuses requires remote API with auth — not available via local proxy
+	let testStatusId = ''
+	await test('POST /v1/project_statuses (remote — create)', async () => {
+		const data = await remoteReq<{ data: { id: string; name: string } }>('POST', '/v1/project_statuses', {
+			project_id: projectId,
+			name: '_vp_test_status',
+			color: '0 0% 50%',
+			sort_order: 999,
+		})
+		testStatusId = data.data.id
+		cleanup.push(async () => {
+			await remoteReq('DELETE', `/v1/project_statuses/${testStatusId}`).catch(() => {})
+		})
+		return { id: testStatusId }
+	})
 
-	// ── 5. Tags (read-only via local API) ──
+	// ── 5. Tags ──
 	console.log('\nTags')
 	let existingTagId = ''
-	await test('GET /api/remote/tags?project_id=...', async () => {
-		const data = await req<{ tags: Array<{ id: string; name: string }> }>('GET', `/api/remote/tags?project_id=${projectId}`)
+	await test('GET /api/remote/tags (local)', async () => {
+		const data = await localReq<{ tags: Array<{ id: string; name: string }> }>('GET', `/api/remote/tags?project_id=${projectId}`)
 		if (data.tags.length > 0) existingTagId = data.tags[0]!.id
 		return { count: data.tags.length, tags: data.tags.map(t => t.name) }
 	})
 
-	// NOTE: POST/DELETE for tags requires remote API with auth — not available via local proxy
+	let testTagId = ''
+	await test('POST /v1/tags (remote — create)', async () => {
+		const data = await remoteReq<{ data: { id: string; name: string } }>('POST', '/v1/tags', {
+			project_id: projectId,
+			name: '_vp_test_tag',
+			color: '0 0% 50%',
+		})
+		testTagId = data.data.id
+		cleanup.push(async () => {
+			await remoteReq('DELETE', `/v1/tags/${testTagId}`).catch(() => {})
+		})
+		return { id: testTagId }
+	})
 
-	// ── 6. Issues ──
+	// ── 6. Issues (local proxy — full CRUD) ──
 	console.log('\nIssues')
 	const todoStatusId = statusMap['to do'] ?? Object.values(statusMap)[0] ?? ''
 	let testIssueId = ''
 
-	await test('POST /api/remote/issues (create test issue)', async () => {
-		const data = await req<{ data: { id: string; title: string } }>('POST', '/api/remote/issues', {
+	await test('POST /api/remote/issues (create)', async () => {
+		const data = await localReq<{ data: { id: string; title: string } }>('POST', '/api/remote/issues', {
 			project_id: projectId,
 			status_id: todoStatusId,
 			title: '_vp_test_issue',
-			description: 'Test issue created by vibe-pilot API smoke test. Will be deleted.',
+			description: 'Test issue by vibe-pilot. Will be deleted.',
 			priority: 'low',
 			sort_order: 999,
 			extension_metadata: {},
 		})
 		testIssueId = data.data.id
 		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/issues/${testIssueId}`).catch(() => {})
+			await localReq('DELETE', `/api/remote/issues/${testIssueId}`).catch(() => {})
 		})
 		return { id: testIssueId }
 	})
 
 	if (testIssueId) {
 		await test('GET /api/remote/issues/{id}', async () => {
-			const data = await req<{ id: string; title: string }>('GET', `/api/remote/issues/${testIssueId}`)
-			return { id: data.id, title: data.title }
+			return await localReq<{ id: string; title: string }>('GET', `/api/remote/issues/${testIssueId}`)
 		})
-	}
 
-	await test('POST /api/remote/issues/search', async () => {
-		const data = await req<{ issues: unknown[]; total_count: number }>('POST', '/api/remote/issues/search', {
-			project_id: projectId,
-			status_id: todoStatusId,
-			sort_field: 'sort_order',
-			sort_direction: 'Asc',
-			limit: 5,
+		await test('POST /api/remote/issues/search', async () => {
+			return await localReq<{ issues: unknown[]; total_count: number }>('POST', '/api/remote/issues/search', {
+				project_id: projectId,
+				status_id: todoStatusId,
+				sort_field: 'sort_order',
+				sort_direction: 'Asc',
+				limit: 5,
+			})
 		})
-		return { count: data.total_count, returned: data.issues.length }
-	})
 
-	if (testIssueId) {
 		await test('PATCH /api/remote/issues/{id} (update)', async () => {
-			const data = await req<{ data: { id: string; title: string } }>('PATCH', `/api/remote/issues/${testIssueId}`, {
+			return await localReq<{ data: { id: string; title: string } }>('PATCH', `/api/remote/issues/${testIssueId}`, {
 				title: '_vp_test_issue_updated',
 				priority: 'medium',
 			})
-			return { id: data.data.id, title: data.data.title }
 		})
 	}
 
-	// ── 7. Issue Tags ──
+	// ── 7. Issue Tags (local proxy) ──
 	console.log('\nIssue Tags')
+	const tagForIssue = testTagId || existingTagId
 	let testIssueTagId = ''
 
-	if (testIssueId && existingTagId) {
-		await test('POST /api/remote/issue-tags (add tag to issue)', async () => {
-			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-tags', {
+	if (testIssueId && tagForIssue) {
+		await test('POST /api/remote/issue-tags (add tag)', async () => {
+			const data = await localReq<{ data: { id: string } }>('POST', '/api/remote/issue-tags', {
 				issue_id: testIssueId,
-				tag_id: existingTagId,
+				tag_id: tagForIssue,
 			})
 			testIssueTagId = data.data.id
 			cleanup.push(async () => {
-				await req('DELETE', `/api/remote/issue-tags/${testIssueTagId}`).catch(() => {})
+				await localReq('DELETE', `/api/remote/issue-tags/${testIssueTagId}`).catch(() => {})
 			})
 			return { issueTagId: testIssueTagId }
 		})
 
 		await test('GET /api/remote/issue-tags?issue_id=...', async () => {
-			const data = await req<{ issue_tags: Array<{ id: string; tag_id: string }> }>('GET', `/api/remote/issue-tags?issue_id=${testIssueId}`)
-			return { count: data.issue_tags.length }
+			return await localReq<{ issue_tags: Array<{ id: string }> }>('GET', `/api/remote/issue-tags?issue_id=${testIssueId}`)
 		})
 	} else {
-		console.log('  ⏭ Skipping issue-tags (no test issue or no existing tags)')
+		console.log('  ⏭ Skipping (no issue or tag)')
 	}
 
-	// ── 8. Issue Relationships ──
+	// ── 8. Issue Relationships (local proxy) ──
 	console.log('\nIssue Relationships')
 	let testIssue2Id = ''
-	let testRelId = ''
 
 	if (testIssueId) {
-		await test('POST /api/remote/issues (create 2nd issue for relationship)', async () => {
-			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issues', {
+		await test('POST /api/remote/issues (create 2nd issue)', async () => {
+			const data = await localReq<{ data: { id: string } }>('POST', '/api/remote/issues', {
 				project_id: projectId,
 				status_id: todoStatusId,
 				title: '_vp_test_issue_2',
@@ -195,45 +225,45 @@ async function main() {
 			})
 			testIssue2Id = data.data.id
 			cleanup.push(async () => {
-				await req('DELETE', `/api/remote/issues/${testIssue2Id}`).catch(() => {})
+				await localReq('DELETE', `/api/remote/issues/${testIssue2Id}`).catch(() => {})
 			})
 			return { id: testIssue2Id }
 		})
 	}
 
+	let testRelId = ''
 	if (testIssueId && testIssue2Id) {
 		await test('POST /api/remote/issue-relationships (blocking)', async () => {
-			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-relationships', {
+			const data = await localReq<{ data: { id: string } }>('POST', '/api/remote/issue-relationships', {
 				issue_id: testIssueId,
 				related_issue_id: testIssue2Id,
 				relationship_type: 'blocking',
 			})
 			testRelId = data.data.id
 			cleanup.push(async () => {
-				await req('DELETE', `/api/remote/issue-relationships/${testRelId}`).catch(() => {})
+				await localReq('DELETE', `/api/remote/issue-relationships/${testRelId}`).catch(() => {})
 			})
 			return { id: testRelId }
 		})
 
 		await test('GET /api/remote/issue-relationships?issue_id=...', async () => {
-			const data = await req<{ issue_relationships: Array<{ id: string; relationship_type: string }> }>('GET', `/api/remote/issue-relationships?issue_id=${testIssue2Id}`)
-			return { count: data.issue_relationships.length }
+			return await localReq<{ issue_relationships: Array<{ id: string }> }>('GET', `/api/remote/issue-relationships?issue_id=${testIssue2Id}`)
 		})
 	} else {
-		console.log('  ⏭ Skipping relationships (no test issues)')
+		console.log('  ⏭ Skipping (no issues)')
 	}
 
-	// ── 9. Repos ──
+	// ── 9. Repos (local) ──
 	console.log('\nRepos')
 	await test('GET /api/repos', async () => {
-		const data = await req<Array<{ id: string; path: string }>>('GET', '/api/repos')
+		const data = await localReq<Array<{ id: string; path: string }>>('GET', '/api/repos')
 		return { count: data.length, paths: data.slice(0, 3).map(r => r.path) }
 	})
 
-	// ── 10. Workspaces ──
+	// ── 10. Workspaces (local) ──
 	console.log('\nWorkspaces')
 	await test('GET /api/workspaces', async () => {
-		const data = await req<Array<{ id: string; name: string | null }>>('GET', '/api/workspaces')
+		const data = await localReq<Array<{ id: string; name: string | null }>>('GET', '/api/workspaces')
 		return { count: data.length }
 	})
 
@@ -254,9 +284,7 @@ function printSummary() {
 	console.log(`  ${passed} passed, ${failed} failed, ${results.length} total`)
 	if (failed > 0) {
 		console.log('\nFailed:')
-		for (const r of results.filter(r => !r.ok)) {
-			console.log(`  ✗ ${r.name}: ${r.error}`)
-		}
+		for (const r of results.filter(r => !r.ok)) console.log(`  ✗ ${r.name}: ${r.error}`)
 	}
 	console.log('')
 	process.exit(failed > 0 ? 1 : 0)
