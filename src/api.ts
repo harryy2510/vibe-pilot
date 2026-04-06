@@ -45,15 +45,28 @@ export class VkApi {
 		return json as T
 	}
 
-	// Remote API requests go directly to VK_SHARED_API_BASE (no wrapper)
+	// Get auth token from local server for remote API calls
+	private async getAuthToken(): Promise<string> {
+		const data = await this.request<{ access_token: string; expires_at: string | null }>('GET', '/api/auth/token')
+		return data.access_token
+	}
+
+	// Remote API requests go directly to VK_SHARED_API_BASE with bearer auth
 	private async remoteRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
 		if (!this.remoteApiBase) {
 			throw new Error('Remote API base not configured — set vk_shared_api_base in config')
 		}
+
+		const token = await this.getAuthToken()
 		const url = `${this.remoteApiBase}${path}`
+		const headers: Record<string, string> = {
+			Authorization: `Bearer ${token}`,
+		}
+		if (body) headers['Content-Type'] = 'application/json'
+
 		const res = await fetch(url, {
 			method,
-			headers: body ? { 'Content-Type': 'application/json' } : undefined,
+			headers,
 			body: body ? JSON.stringify(body) : undefined,
 		})
 

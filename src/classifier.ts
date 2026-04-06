@@ -35,7 +35,7 @@ export async function classifyBacklogTasks(
 		project_id: projectConfig.project_id,
 		status_id: backlogStatusId,
 		sort_field: 'sort_order',
-		sort_direction: 'Asc',
+		sort_direction: 'asc',
 		limit: 10,
 	})
 

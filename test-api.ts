@@ -31,10 +31,23 @@ async function localReq<T>(method: string, path: string, body?: unknown): Promis
 	return json as T
 }
 
+let authToken = ''
+
+async function getToken(): Promise<string> {
+	if (authToken) return authToken
+	const data = await localReq<{ access_token: string }>('GET', '/api/auth/token')
+	authToken = data.access_token
+	return authToken
+}
+
 async function remoteReq<T>(method: string, path: string, body?: unknown): Promise<T> {
+	const token = await getToken()
+	const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
+	if (body) headers['Content-Type'] = 'application/json'
+
 	const res = await fetch(`${REMOTE}${path}`, {
 		method,
-		headers: body ? { 'Content-Type': 'application/json' } : undefined,
+		headers,
 		body: body ? JSON.stringify(body) : undefined,
 	})
 	const text = await res.text()
@@ -172,7 +185,7 @@ async function main() {
 				project_id: projectId,
 				status_id: todoStatusId,
 				sort_field: 'sort_order',
-				sort_direction: 'Asc',
+				sort_direction: 'asc',
 				limit: 5,
 			})
 		})

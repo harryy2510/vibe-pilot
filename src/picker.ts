@@ -172,7 +172,7 @@ export async function pickAndStartTasks(
 		project_id: projectConfig.project_id,
 		status_id: todoId,
 		sort_field: 'sort_order',
-		sort_direction: 'Asc',
+		sort_direction: 'asc',
 		limit: 20,
 	})
 
@@ -286,7 +286,7 @@ export async function startTriageWorkspaces(
 		project_id: projectConfig.project_id,
 		status_id: triageId,
 		sort_field: 'sort_order',
-		sort_direction: 'Asc',
+		sort_direction: 'asc',
 		limit: 10,
 	})
 
