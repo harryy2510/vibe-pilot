@@ -20,12 +20,13 @@ export function loadConfig(): AutopilotConfig {
 	if (!config.vk_api) throw new Error('Config missing "vk_api"')
 	if (!config.vk_shared_api_base) throw new Error('Config missing "vk_shared_api_base"')
 	if (!config.org_id) throw new Error('Config missing "org_id"')
-	if (!config.models?.high?.length) throw new Error('Config missing "models.high"')
-	if (!config.models?.medium?.length) throw new Error('Config missing "models.medium"')
-	if (!config.models?.low?.length) throw new Error('Config missing "models.low"')
+	config.models ??= {} as AutopilotConfig['models']
+	config.models.high ??= [{ executor: 'CLAUDE_CODE', model: 'opus' }]
+	config.models.medium ??= [{ executor: 'CLAUDE_CODE', model: 'sonnet' }]
+	config.models.low ??= [{ executor: 'CLAUDE_CODE', model: 'haiku' }]
 
 	// Apply defaults
-	config.scan_depth ??= 1
+	config.scan_depth ??= 2
 	config.interval ??= 60
 	config.defaults ??= {} as AutopilotConfig['defaults']
 	config.defaults.concurrency ??= 3
