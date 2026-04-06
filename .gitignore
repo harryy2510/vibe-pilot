@@ -1,4 +1,5 @@
 node_modules/
 dist/
 autopilot.config.json
-ecosystem.toml
+oxfile.toml
+*.har

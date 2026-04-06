@@ -7,7 +7,7 @@
     Code does code work. AI does AI work.
   </p>
   <p align="center">
-    <code>11 modules</code> · <code>5 skills</code> · <code>3 model tiers</code> · <code>0 dependencies</code>
+    <code>11 modules</code> · <code>5 skills</code> · <code>3 model tiers</code> · <code>1 dependency</code>
   </p>
 </p>
 
@@ -23,15 +23,15 @@
 ---
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                                                                            │
-│   A deterministic Bun process that discovers your repos, sets up           │
-│   kanban boards, classifies tasks, triages complex work, picks             │
-│   what to build next, and launches AI workspaces — all on autopilot.       │
-│                                                                            │
-│   You add tasks to Backlog. Vibe Pilot does the rest.                      │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
++--------------------------------------------------------------------------+
+|                                                                          |
+|   A deterministic Bun process that discovers your repos, sets up         |
+|   kanban boards, classifies tasks, triages complex work, picks           |
+|   what to build next, and launches AI workspaces -- all on autopilot.    |
+|                                                                          |
+|   You add tasks to Backlog. Vibe Pilot does the rest.                    |
+|                                                                          |
++--------------------------------------------------------------------------+
 ```
 
 ---
@@ -39,20 +39,20 @@
 ## The Philosophy
 
 ```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                                                                     │
-  │   DETERMINISTIC CODE              AI AGENTS                        │
-  │   ────────────────                ──────────                        │
-  │   Project discovery               Classify: simple or complex?     │
-  │   Board setup & tags              Triage: break down complex tasks  │
-  │   Slot counting                   Implement: write code & PR        │
-  │   Dependency resolution           Report: weekly status updates     │
-  │   Round-robin routing                                               │
-  │   Stacked PR orchestration                                          │
-  │                                                                     │
-  │   Code does code work.            AI does AI work.                  │
-  │                                                                     │
-  └─────────────────────────────────────────────────────────────────────┘
+  +---------------------------------------------------------------------+
+  |                                                                     |
+  |   DETERMINISTIC CODE              AI AGENTS                        |
+  |   ----------------                ----------                        |
+  |   Project discovery               Classify: simple or complex?     |
+  |   Board setup & tags              Triage: break down complex tasks  |
+  |   Slot counting                   Implement: write code & PR        |
+  |   Dependency resolution           Report: weekly status updates     |
+  |   Round-robin routing                                               |
+  |   Stacked PR orchestration                                          |
+  |                                                                     |
+  |   Code does code work.            AI does AI work.                  |
+  |                                                                     |
+  +---------------------------------------------------------------------+
 ```
 
 ---
@@ -60,35 +60,35 @@
 ## How It Works
 
 ```
-                    ┌──────────┐
-                    │ Backlog  │  You drop tasks here
-                    └────┬─────┘
-                         │
-                    ┌────▼─────┐
-                    │ Classify │  Haiku: "simple or complex?"
-                    └──┬────┬──┘
-                       │    │
-              simple   │    │   complex
-                       │    │
-                 ┌─────▼┐  ┌▼──────┐
-                 │ To Do│  │Triage │  Opus brainstorms,
-                 └──┬───┘  └───┬───┘  breaks into subtasks
-                    │          │
-                    │   ┌──────┘
-                    │   │
-              ┌─────▼───▼────┐
-              │  In Progress  │  Workspace launched,
-              │               │  agent writes code
-              └──────┬────────┘
-                     │
-              ┌──────▼────────┐
-              │   In Review   │  PR created,
-              │               │  ready for you
-              └──────┬────────┘
-                     │
-              ┌──────▼────────┐
-              │     Done      │  Merged
-              └───────────────┘
+                    +----------+
+                    | Backlog  |  You drop tasks here
+                    +----+-----+
+                         |
+                    +----v-----+
+                    | Classify |  Haiku: "simple or complex?"
+                    +--+----+--+
+                       |    |
+              simple   |    |   complex
+                       |    |
+                 +-----v+  +v------+
+                 | To Do|  |Triage |  Opus brainstorms,
+                 +--+---+  +---+---+  breaks into subtasks
+                    |          |
+                    |   +------+
+                    |   |
+              +-----v---v----+
+              |  In Progress  |  Workspace launched,
+              |               |  agent writes code
+              +------+--------+
+                     |
+              +------v--------+
+              |   In Review   |  PR created,
+              |               |  ready for you
+              +------+--------+
+                     |
+              +------v--------+
+              |     Done      |  Merged
+              +---------------+
 ```
 
 ---
@@ -98,20 +98,20 @@
 Not locked to one AI. Three tiers, round-robin across providers.
 
 ```
-  HIGH  ──────────────────────────────────────────────────────
+  HIGH  ----------------------------------------------------------
   Triage, brainstorming, architecture decisions
 
-    Claude Opus  →  Gemini Pro  →  Codex GPT-5.4  →  ↻
+    Claude Opus  ->  Gemini Pro  ->  Codex GPT-5.4  ->  repeat
 
-  MEDIUM  ────────────────────────────────────────────────────
+  MEDIUM  --------------------------------------------------------
   Implementation, feature work, bug fixes
 
-    Claude Sonnet  →  Gemini Pro  →  Codex GPT-5.2  →  ↻
+    Claude Sonnet  ->  Gemini Pro  ->  Codex GPT-5.2  ->  repeat
 
-  LOW  ───────────────────────────────────────────────────────
+  LOW  -----------------------------------------------------------
   Classification, simple tasks, quick fixes
 
-    Claude Haiku  →  Gemini Flash  →  Codex Fast  →  ↻
+    Claude Haiku  ->  Gemini Flash  ->  Codex Fast  ->  repeat
 ```
 
 ---
@@ -121,13 +121,13 @@ Not locked to one AI. Three tiers, round-robin across providers.
 Dependent tasks don't wait. They branch off the blocker's working branch.
 
 ```
-  main ─────────────────────────────────────────────────►
+  main ---------------------------------------------------------->
          \
-          └─── vk/auth-middleware ──────────────────────►  Task A (blocker)
+          +--- vk/auth-middleware ------------------------------>  Task A (blocker)
                   \
-                   └─── vk/user-profile ───────────────►  Task B (blocked by A)
+                   +--- vk/user-profile ----------------------->  Task B (blocked by A)
                            \
-                            └─── vk/profile-tests ─────►  Task C (blocked by B)
+                            +--- vk/profile-tests ------------->  Task C (blocked by B)
 ```
 
 When A merges, GitHub auto-retargets B to main. No idle slots.
@@ -136,11 +136,11 @@ When A merges, GitHub auto-retargets B to main. No idle slots.
 
 ## Workspace Dedup
 
-The autopilot fetches active workspaces once per cycle. If a workspace is already running for a task, it skips — no duplicate agents, no wasted compute.
+The autopilot fetches active workspaces once per cycle. If a workspace is already running for a task, it skips -- no duplicate agents, no wasted compute.
 
 ```
-  Cycle N:   Classify "Add auth" → workspace started ✓
-  Cycle N+1: Classify "Add auth" → workspace exists, skip ⏭
+  Cycle N:   Classify "Add auth" -> workspace started
+  Cycle N+1: Classify "Add auth" -> workspace exists, skip
 ```
 
 ---
@@ -151,11 +151,11 @@ Loaded into AI workspaces. Each skill is a focused instruction set.
 
 | Skill | Tier | What happens |
 |---|---|---|
-| `classify` | Low | Haiku reads task, decides simple→To Do or complex→Triage |
+| `classify` | Low | Haiku reads task, decides simple->To Do or complex->Triage |
 | `triage` | High | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
 | `implement` | Medium | Agent writes code, runs tests, creates PR, links to issue |
 | `status-report` | High | Technical Writer generates weekly HTML report from git + board data |
-| `model-agent-ref` | — | Lookup table mapping tiers to specialist agents |
+| `model-agent-ref` | -- | Lookup table mapping tiers to specialist agents |
 
 ---
 
@@ -164,17 +164,19 @@ Loaded into AI workspaces. Each skill is a focused instruction set.
 ```
 vibe-pilot/
 ├── src/
-│   ├── index.ts           Entry point — load config, start cycle timer
-│   ├── cycle.ts           Main loop — orchestrates all steps per project
+│   ├── index.ts           Entry point -- load config, start cycle timer
+│   ├── cycle.ts           Main loop -- orchestrates all steps per project
 │   ├── config.ts          Load + validate autopilot.config.json
-│   ├── discover.ts        Scan workspace for git repos with vibe-kanban.json
-│   ├── setup.ts           Create projects, statuses, tags in vibe-kanban
+│   ├── discover.ts        Recursive scan for git repos (up to scan_depth)
+│   ├── setup.ts           Create projects, statuses, tags, link default repos
 │   ├── classifier.ts      Start Haiku workspaces for backlog tasks
 │   ├── picker.ts          Pick To Do tasks, resolve deps, start workspaces
-│   ├── reporter.ts        Saturday check — create weekly status report tasks
+│   ├── reporter.ts        Saturday check -- create weekly status report tasks
 │   ├── api.ts             VkApi client (local + remote with auth)
 │   ├── types.ts           All TypeScript types
 │   └── logger.ts          Structured logger with timestamps
+├── scripts/
+│   └── clean.ts           Full reset -- delete all projects, repos, workspaces
 ├── skills/                AI workspace instruction sets
 │   ├── classify.md
 │   ├── triage.md
@@ -182,10 +184,9 @@ vibe-pilot/
 │   ├── status-report.md
 │   └── model-agent-ref.md
 ├── autopilot.config.sample.json  Sample config (copy to autopilot.config.json)
-├── ecosystem.sample.toml         Sample pmdaemon config (copy to ecosystem.toml)
-├── start.sh                      Entrypoint wrapper (resolves own directory)
+├── oxfile.sample.toml            Sample oxfile config (copy to oxfile.toml)
 ├── test-api.ts                   25-test E2E suite against live vibe-kanban
-└── package.json                  Zero runtime dependencies
+└── package.json
 ```
 
 ---
@@ -200,16 +201,23 @@ bun install
 
 # 2. Configure
 cp autopilot.config.sample.json autopilot.config.json
-cp ecosystem.sample.toml ecosystem.toml
+cp oxfile.sample.toml oxfile.toml
 # Edit autopilot.config.json:
 #   - Set "workspace" to your projects directory
 #   - Set "org_id" to your vibe-kanban org ID
 #   - Set "vk_shared_api_base" to your server URL
-# Edit ecosystem.toml:
+# Edit oxfile.toml:
 #   - Set VK_SHARED_API_BASE / VK_SHARED_RELAY_API_BASE to your server URLs
 
-# 3. Run with pmdaemon (recommended)
-pmdaemon --config ecosystem.toml start       # starts vibe-kanban + autopilot
+# 3. Run with oxfile (recommended)
+ox start                              # starts vibe-kanban + autopilot
+
+# Or run directly
+bun run start                         # autopilot only (vibe-kanban must be running)
+bun run dev                           # autopilot with --watch
+
+# Reset everything
+bun run clean                         # deletes all projects, repos, workspaces
 ```
 
 ---
@@ -222,13 +230,14 @@ pmdaemon --config ecosystem.toml start       # starts vibe-kanban + autopilot
   "vk_api": "http://localhost:4040",       // local vibe-kanban server
   "vk_shared_api_base": "https://...",     // remote API for mutations
   "org_id": "...",                         // your organization ID
-  "scan_depth": 1,                         // directory depth to scan
+  "scan_depth": 2,                         // directory depth to scan (default: 2)
   "interval": 60,                          // seconds between cycles
 
   "defaults": {
     "concurrency": 3,                      // max parallel workspaces per project
     "stack_prs": true,                     // branch off blockers instead of waiting
     "target_branch": "main",               // default base branch
+    "copy_files": [".env.keys"],           // files copied into workspaces
     "tags": ["migration", "blocked", ...]  // auto-created on each project
   },
 
@@ -265,27 +274,27 @@ Every 60 seconds, for each discovered project:
 
 ```
   Health check
-       │
-       ▼
-  Discover git repos in workspace
-       │
-       ▼
-  Setup/fix — ensure project, statuses, tags exist
-       │
-       ▼
-  Classify — start Haiku workspace for 1 backlog task
-       │
-       ▼
-  Triage — start Opus workspace for 1 triage task
-       │
-       ▼
-  Reports — Saturday? create weekly status report task
-       │
-       ▼
-  Pick — fill open slots from To Do, resolve deps, start workspaces
-       │
-       ▼
-  Sleep 60s → repeat
+       |
+       v
+  Discover git repos in workspace (recursive, up to scan_depth)
+       |
+       v
+  Setup/fix -- ensure project, statuses, tags, default repos exist
+       |
+       v
+  Classify -- start Haiku workspace for 1 backlog task
+       |
+       v
+  Triage -- start Opus workspace for 1 triage task
+       |
+       v
+  Reports -- Saturday? create weekly status report task
+       |
+       v
+  Pick -- fill open slots from To Do, resolve deps, start workspaces
+       |
+       v
+  Sleep 60s -> repeat
 ```
 
 ---
