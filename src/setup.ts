@@ -1,6 +1,7 @@
-import { writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import type { AutopilotConfig, DiscoveredProject, ProjectConfig } from './types'
+import { kebabCase } from 'es-toolkit/string'
+import type { AutopilotConfig, DiscoveredProject, ProjectConfig, ProjectStatus } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
 
@@ -17,6 +18,20 @@ const TAG_COLORS: Record<string, string> = {
 	'status-update': '160 70% 40%',
 }
 
+// Distinct project colors — cycles through these based on project index
+const PROJECT_COLORS = [
+	'355 65% 53%',  // red
+	'25 85% 55%',   // orange
+	'45 85% 50%',   // amber
+	'142 60% 40%',  // green
+	'195 80% 45%',  // cyan
+	'210 80% 55%',  // blue
+	'265 65% 55%',  // purple
+	'320 65% 55%',  // pink
+	'175 65% 40%',  // teal
+	'15 75% 50%',   // burnt orange
+]
+
 export async function setupProject(
 	api: VkApi,
 	project: DiscoveredProject,
@@ -28,16 +43,17 @@ export async function setupProject(
 	// Step 1: Find or create project in vibe-kanban
 	const { projects } = await api.listProjects(config.org_id)
 	let vkProject = projects.find(
-		p => p.name.toLowerCase() === projectName.toLowerCase(),
+		p => kebabCase(p.name) === kebabCase(projectName),
 	)
 
 	if (!vkProject) {
+		const color = PROJECT_COLORS[projects.length % PROJECT_COLORS.length]!
 		log.info(`Creating project "${projectName}" in vibe-kanban`)
 		try {
 			const result = await api.createProject({
 				organization_id: config.org_id,
 				name: projectName,
-				color: '210 80% 55%',
+				color,
 			})
 			vkProject = result.data
 			log.info(`Created project: ${vkProject.name}`, { id: vkProject.id })
@@ -59,20 +75,29 @@ export async function setupProject(
 		})
 	}
 
-	// Step 3: Update repo scripts
+	// Step 3: Ensure vibe scripts exist in target repo's package.json
+	ensureVibeScripts(project.path, config)
+
+	// Step 4: Update repo scripts
 	await api.updateRepo(repo.id, {
 		setup_script: config.defaults.setup_script,
 		cleanup_script: config.defaults.cleanup_script,
 		dev_server_script: config.defaults.dev_script,
 	})
 
-	// Step 4: Ensure Triage status exists
+	// Step 5: Link repo as default for this project
+	await api.addDefaultRepo(vkProject.id, repo.id).catch(err => {
+		log.warn('Could not link default repo (may already be linked)', { error: String(err) })
+	})
+
+	// Step 6: Ensure Backlog is visible and Triage status exists
+	await ensureBacklogVisible(api, vkProject.id)
 	await ensureTriageStatus(api, vkProject.id)
 
-	// Step 5: Ensure standard tags exist
+	// Step 7: Ensure standard tags exist
 	await ensureStandardTags(api, vkProject.id, config.defaults.tags)
 
-	// Step 6: Write vibe-kanban.json
+	// Step 8: Write vibe-kanban.json
 	const projectConfig: ProjectConfig = {
 		org_id: config.org_id,
 		project_id: vkProject.id,
@@ -86,6 +111,56 @@ export async function setupProject(
 	log.info(`Wrote vibe-kanban.json`, { path: vkConfigPath })
 
 	return projectConfig
+}
+
+export async function ensureBacklogVisible(api: VkApi, projectId: string): Promise<void> {
+	const { project_statuses: statuses } = await api.listProjectStatuses(projectId)
+	const backlog = statuses.find(s => s.name.toLowerCase() === 'backlog')
+	if (!backlog) return
+
+	// ProjectStatus type doesn't have `hidden` but the API returns it
+	const raw = backlog as ProjectStatus & { hidden?: boolean }
+	if (raw.hidden === true) {
+		try {
+			await api.updateProjectStatus(backlog.id, { hidden: false })
+			log.info('Enabled Backlog status', { projectId })
+		} catch (err) {
+			log.warn('Could not enable Backlog status', { projectId, error: String(err) })
+		}
+	}
+}
+
+export function ensureVibeScripts(repoPath: string, config: AutopilotConfig): void {
+	const pkgPath = join(repoPath, 'package.json')
+	if (!existsSync(pkgPath)) return
+
+	try {
+		const raw = readFileSync(pkgPath, 'utf-8')
+		const pkg = JSON.parse(raw) as { scripts?: Record<string, string> }
+		pkg.scripts ??= {}
+
+		// Extract script names from config (e.g. "bun vibe-dev" → "vibe-dev")
+		const scriptNames = [
+			config.defaults.dev_script,
+			config.defaults.setup_script,
+			config.defaults.cleanup_script,
+		].map(s => s.replace(/^bun\s+/, '').replace(/^bun\s+run\s+/, ''))
+
+		let changed = false
+		for (const name of scriptNames) {
+			if (!pkg.scripts[name]) {
+				pkg.scripts[name] = 'echo "no-op"'
+				changed = true
+			}
+		}
+
+		if (changed) {
+			writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+			log.info('Added vibe scripts to package.json', { path: pkgPath })
+		}
+	} catch (err) {
+		log.warn('Could not update package.json with vibe scripts', { path: pkgPath, error: String(err) })
+	}
 }
 
 export async function ensureTriageStatus(api: VkApi, projectId: string): Promise<string | null> {
@@ -193,7 +268,11 @@ export async function fixIncompleteConfig(
 		log.info('Fixed incomplete vibe-kanban.json', { path: vkConfigPath })
 	}
 
-	// Still ensure tags and triage status exist
+	// Ensure vibe scripts exist in repo
+	ensureVibeScripts(project.path, config)
+
+	// Ensure backlog visible, triage status, tags
+	await ensureBacklogVisible(api, updated.project_id)
 	await ensureTriageStatus(api, updated.project_id)
 	await ensureStandardTags(api, updated.project_id, config.defaults.tags)
 

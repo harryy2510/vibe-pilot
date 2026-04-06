@@ -131,6 +131,15 @@ export class VkApi {
 		})
 	}
 
+	async updateProjectStatus(statusId: string, body: {
+		hidden?: boolean
+		name?: string
+		color?: string
+		sort_order?: number
+	}): Promise<MutationResponse<ProjectStatus>> {
+		return this.remoteRequest('PATCH', `/v1/project_statuses/${statusId}`, body)
+	}
+
 	// -- Issues --
 
 	async searchIssues(body: {
@@ -238,6 +247,12 @@ export class VkApi {
 		dev_server_script?: string
 	}): Promise<Repo> {
 		return this.request('PUT', `/api/repos/${repoId}`, body)
+	}
+
+	async addDefaultRepo(projectId: string, repoId: string): Promise<void> {
+		await this.request('POST', `/api/projects/${projectId}/default-repos`, {
+			repo_id: repoId,
+		})
 	}
 
 	// -- Workspaces --

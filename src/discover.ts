@@ -1,8 +1,10 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import type { AutopilotConfig, DiscoveredProject, ProjectConfig } from './types'
 import { log } from './logger'
+
+const selfDir = realpathSync(join(import.meta.dir, '..'))
 
 export function discoverProjects(config: AutopilotConfig): DiscoveredProject[] {
 	const { workspace, scan_depth = 2 } = config
@@ -36,6 +38,9 @@ export function discoverProjects(config: AutopilotConfig): DiscoveredProject[] {
 
 			// Check for .git — if found, it's a project
 			if (existsSync(join(fullPath, '.git'))) {
+				// Skip the autopilot repo itself
+				if (fullPath === selfDir) continue
+
 				let projectConfig: ProjectConfig | null = null
 				const vkConfigPath = join(fullPath, 'vibe-kanban.json')
 
