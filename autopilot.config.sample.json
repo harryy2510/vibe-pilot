@@ -1,8 +1,8 @@
 {
-  "workspace": "/Users/harryy/Desktop",
+  "workspace": "/path/to/your/projects",
   "vk_api": "http://localhost:4040",
-  "vk_shared_api_base": "https://server-vibe.hariom.cc",
-  "org_id": "REPLACE_WITH_ORG_ID",
+  "vk_shared_api_base": "https://your-server.example.com",
+  "org_id": "YOUR_ORG_ID",
   "scan_depth": 1,
   "interval": 60,
   "defaults": {

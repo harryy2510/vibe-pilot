@@ -181,10 +181,11 @@ vibe-pilot/
 │   ├── implement.md
 │   ├── status-report.md
 │   └── model-agent-ref.md
-├── autopilot.config.json  Model pools, defaults, workspace path
-├── oxfile.toml            Process manager config (vibe-kanban + autopilot)
-├── test-api.ts            25-test E2E suite against live vibe-kanban
-└── package.json           Zero runtime dependencies
+├── autopilot.config.sample.json  Sample config (copy to autopilot.config.json)
+├── ecosystem.sample.toml         Sample pmdaemon config (copy to ecosystem.toml)
+├── start.sh                      Entrypoint wrapper (resolves own directory)
+├── test-api.ts                   25-test E2E suite against live vibe-kanban
+└── package.json                  Zero runtime dependencies
 ```
 
 ---
@@ -198,17 +199,17 @@ cd vibe-pilot
 bun install
 
 # 2. Configure
+cp autopilot.config.sample.json autopilot.config.json
+cp ecosystem.sample.toml ecosystem.toml
 # Edit autopilot.config.json:
 #   - Set "workspace" to your projects directory
 #   - Set "org_id" to your vibe-kanban org ID
 #   - Set "vk_shared_api_base" to your server URL
+# Edit ecosystem.toml:
+#   - Set VK_SHARED_API_BASE / VK_SHARED_RELAY_API_BASE to your server URLs
 
-# 3. Run with oxmgr (recommended)
-ox start                  # starts vibe-kanban + autopilot
-
-# Or standalone
-bun run start             # just the autopilot
-bun run dev               # with --watch
+# 3. Run with pmdaemon (recommended)
+pmdaemon --config ecosystem.toml start       # starts vibe-kanban + autopilot
 ```
 
 ---

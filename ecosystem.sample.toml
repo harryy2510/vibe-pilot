@@ -1,7 +1,7 @@
 [[apps]]
 name = "vibe-kanban"
 script = "bunx"
-args = ["vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.40-20260401153532/vibe-kanban-0.1.40.tgz"]
+args = ["vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.41-20260403182044/vibe-kanban-0.1.41.tgz"]
 autorestart = true
 max_restarts = 10
 
@@ -13,8 +13,8 @@ timeout = 5
 retries = 3
 
 [apps.env]
-VK_SHARED_API_BASE = "https://server-vibe.hariom.cc"
-VK_SHARED_RELAY_API_BASE = "https://relay-vibe.hariom.cc"
+VK_SHARED_API_BASE = "https://your-server.example.com"
+VK_SHARED_RELAY_API_BASE = "https://your-relay.example.com"
 PORT = "4040"
 HOST = "0.0.0.0"
 
