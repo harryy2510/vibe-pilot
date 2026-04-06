@@ -14,6 +14,7 @@ const TAG_COLORS: Record<string, string> = {
 	frontend: '210 80% 55%',
 	backend: '45 80% 50%',
 	setup: '200 60% 45%',
+	'status-update': '160 70% 40%',
 }
 
 export async function setupProject(

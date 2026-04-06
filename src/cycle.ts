@@ -5,6 +5,7 @@ import { discoverProjects, isConfigComplete } from './discover'
 import { fixIncompleteConfig } from './setup'
 import { classifyBacklogTasks } from './classifier'
 import { pickAndStartTasks, startTriageWorkspaces } from './picker'
+import { checkAndCreateReportTasks } from './reporter'
 
 export async function runCycle(
 	config: AutopilotConfig,
@@ -66,14 +67,19 @@ export async function runCycle(
 				api, projectConfig, config, rrState, statusMap,
 			)
 
-			// Step 5: Pick and start implementation tasks
+			// Step 5: Saturday — check for weekly status reports
+			const reports = await checkAndCreateReportTasks(
+				api, projectConfig, config, rrState, statusMap, tagMap, project.path,
+			)
+
+			// Step 6: Pick and start implementation tasks
 			const started = await pickAndStartTasks(
 				api, projectConfig, config, rrState, statusMap, tagMap,
 			)
 
 			// Report only if something happened
-			if (classified + triaged + started > 0) {
-				log.info(`${projectName}: classified=${classified} triaged=${triaged} started=${started}`)
+			if (classified + triaged + started + reports > 0) {
+				log.info(`${projectName}: classified=${classified} triaged=${triaged} started=${started} reports=${reports}`)
 			}
 		} catch (err) {
 			log.error(`Error processing ${projectName}`, { error: String(err) })

@@ -36,7 +36,7 @@ export function loadConfig(): AutopilotConfig {
 	config.defaults.copy_files ??= ['.env.keys']
 	config.defaults.tags ??= [
 		'migration', 'brainstorm', 'blocked', 'bug',
-		'feature', 'enhancement', 'frontend', 'backend', 'setup',
+		'feature', 'enhancement', 'frontend', 'backend', 'setup', 'status-update',
 	]
 
 	return config

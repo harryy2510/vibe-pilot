@@ -14,7 +14,7 @@
     "copy_files": [".env.keys"],
     "tags": [
       "migration", "brainstorm", "blocked", "bug",
-      "feature", "enhancement", "frontend", "backend", "setup"
+      "feature", "enhancement", "frontend", "backend", "setup", "status-update"
     ]
   },
   "models": {
