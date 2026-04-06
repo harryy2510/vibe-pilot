@@ -159,9 +159,9 @@ export async function ensureBacklogVisible(api: VkApi, projectId: string): Promi
 	}
 }
 
-export function ensureVibeScripts(repoPath: string, config: AutopilotConfig): boolean {
+export function ensureVibeScripts(repoPath: string, config: AutopilotConfig): void {
 	const pkgPath = join(repoPath, 'package.json')
-	if (!existsSync(pkgPath)) return false
+	if (!existsSync(pkgPath)) return
 
 	try {
 		const raw = readFileSync(pkgPath, 'utf-8')
@@ -187,10 +187,8 @@ export function ensureVibeScripts(repoPath: string, config: AutopilotConfig): bo
 			writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
 			log.info('Added vibe scripts to package.json', { path: pkgPath })
 		}
-		return changed
 	} catch (err) {
 		log.warn('Could not update package.json with vibe scripts', { path: pkgPath, error: String(err) })
-		return false
 	}
 }
 
@@ -300,12 +298,10 @@ export async function fixIncompleteConfig(
 	}
 
 	// Ensure vibe scripts exist in repo
-	const hadScripts = ensureVibeScripts(project.path, config)
+	ensureVibeScripts(project.path, config)
 
-	// Commit and push if any files changed
-	if (needsWrite || hadScripts) {
-		gitCommitAndPush(project.path, ['vibe-kanban.json', 'package.json'], 'chore: update vibe-kanban config')
-	}
+	// Commit and push any uncommitted config files (covers first-time + updates)
+	gitCommitAndPush(project.path, ['vibe-kanban.json', 'package.json'], 'chore: update vibe-kanban config')
 
 	// Ensure backlog visible, triage status, tags
 	await ensureBacklogVisible(api, updated.project_id)
