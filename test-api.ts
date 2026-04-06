@@ -15,12 +15,14 @@
  * Set TEST_PROJECT_PATH env var if not /home/ubuntu/workspace/harryy2510/test-project
  * Set VK_SHARED_API_BASE env var if not https://server-vibe.hariom.cc
  * Pass --no-workspace to skip workspace start (non-destructive mode)
+ * Pass --no-cleanup to keep created resources for manual inspection
  */
 
 const LOCAL = 'http://localhost:4040'
 const REMOTE = process.env.VK_SHARED_API_BASE ?? 'https://server-vibe.hariom.cc'
 const TEST_PROJECT_PATH = process.env.TEST_PROJECT_PATH ?? '/home/ubuntu/workspace/harryy2510/test-project'
 const SKIP_WORKSPACE = process.argv.includes('--no-workspace')
+const SKIP_CLEANUP = process.argv.includes('--no-cleanup')
 
 type TestResult = { name: string; ok: boolean; error?: string; data?: unknown }
 const results: TestResult[] = []
@@ -363,11 +365,15 @@ agent: Senior Developer
 	}
 
 	// ── Cleanup ──
-	console.log('\nCleanup')
-	for (const fn of cleanup.reverse()) {
-		try { await fn() } catch (err) { console.log(`  ⚠ ${err}`) }
+	if (SKIP_CLEANUP) {
+		console.log(`\nCleanup SKIPPED (--no-cleanup) — ${cleanup.length} resources left for inspection`)
+	} else {
+		console.log('\nCleanup')
+		for (const fn of cleanup.reverse()) {
+			try { await fn() } catch (err) { console.log(`  ⚠ ${err}`) }
+		}
+		console.log(`  Done — ${cleanup.length} resources cleaned`)
 	}
-	console.log(`  Done — ${cleanup.length} resources cleaned`)
 
 	printSummary()
 }
