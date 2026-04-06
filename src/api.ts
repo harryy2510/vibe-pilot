@@ -1,0 +1,197 @@
+import type {
+	CreateAndStartWorkspaceRequest,
+	CreateAndStartWorkspaceResponse,
+	Issue,
+	IssueRelationship,
+	IssueTag,
+	ListIssuesResponse,
+	MutationResponse,
+	Project,
+	ProjectStatus,
+	Repo,
+	Tag,
+	Workspace,
+} from './types'
+import { log } from './logger'
+
+export class VkApi {
+	constructor(private baseUrl: string) {}
+
+	private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+		const url = `${this.baseUrl}${path}`
+		const res = await fetch(url, {
+			method,
+			headers: body ? { 'Content-Type': 'application/json' } : undefined,
+			body: body ? JSON.stringify(body) : undefined,
+		})
+
+		if (!res.ok) {
+			const text = await res.text().catch(() => 'no body')
+			throw new Error(`VK API ${method} ${path} failed (${res.status}): ${text}`)
+		}
+
+		return res.json() as Promise<T>
+	}
+
+	// -- Health --
+
+	async isHealthy(): Promise<boolean> {
+		try {
+			await fetch(`${this.baseUrl}/api/health`)
+			return true
+		} catch {
+			return false
+		}
+	}
+
+	// -- Organizations --
+
+	async listOrganizations(): Promise<{ organizations: Array<{ id: string; name: string; slug: string }> }> {
+		return this.request('GET', '/api/organizations')
+	}
+
+	// -- Projects --
+
+	async listProjects(orgId: string): Promise<{ projects: Project[] }> {
+		return this.request('GET', `/api/remote/projects?organization_id=${orgId}`)
+	}
+
+	async getProject(projectId: string): Promise<Project> {
+		return this.request('GET', `/api/remote/projects/${projectId}`)
+	}
+
+	// -- Project Statuses --
+
+	async listProjectStatuses(projectId: string): Promise<{ project_statuses: ProjectStatus[] }> {
+		return this.request('GET', `/api/remote/project-statuses?project_id=${projectId}`)
+	}
+
+	async createProjectStatus(body: {
+		project_id: string
+		name: string
+		color: string
+		sort_order: number
+	}): Promise<MutationResponse<ProjectStatus>> {
+		return this.request('POST', '/api/remote/project-statuses', body)
+	}
+
+	// -- Issues --
+
+	async searchIssues(body: {
+		project_id: string
+		status_id?: string
+		status_ids?: string[]
+		tag_id?: string
+		sort_field?: string
+		sort_direction?: string
+		limit?: number
+		offset?: number
+	}): Promise<ListIssuesResponse> {
+		return this.request('POST', '/api/remote/issues/search', body)
+	}
+
+	async createIssue(body: {
+		project_id: string
+		status_id: string
+		title: string
+		description?: string
+		priority?: string
+		sort_order: number
+	}): Promise<MutationResponse<Issue>> {
+		return this.request('POST', '/api/remote/issues', body)
+	}
+
+	async updateIssue(issueId: string, body: {
+		status_id?: string
+		title?: string
+		description?: string | null
+		priority?: string | null
+		sort_order?: number
+	}): Promise<MutationResponse<Issue>> {
+		return this.request('PATCH', `/api/remote/issues/${issueId}`, body)
+	}
+
+	async getIssue(issueId: string): Promise<Issue> {
+		return this.request('GET', `/api/remote/issues/${issueId}`)
+	}
+
+	// -- Tags --
+
+	async listTags(projectId: string): Promise<{ tags: Tag[] }> {
+		return this.request('GET', `/api/remote/tags?project_id=${projectId}`)
+	}
+
+	async createTag(body: {
+		project_id: string
+		name: string
+		color: string
+	}): Promise<MutationResponse<Tag>> {
+		return this.request('POST', '/api/remote/tags', body)
+	}
+
+	async deleteTag(tagId: string): Promise<void> {
+		await this.request('DELETE', `/api/remote/tags/${tagId}`)
+	}
+
+	// -- Issue Tags --
+
+	async listIssueTags(issueId: string): Promise<{ issue_tags: IssueTag[] }> {
+		return this.request('GET', `/api/remote/issue-tags?issue_id=${issueId}`)
+	}
+
+	async addIssueTag(body: {
+		issue_id: string
+		tag_id: string
+	}): Promise<MutationResponse<IssueTag>> {
+		return this.request('POST', '/api/remote/issue-tags', body)
+	}
+
+	// -- Issue Relationships --
+
+	async listIssueRelationships(issueId: string): Promise<{ issue_relationships: IssueRelationship[] }> {
+		return this.request('GET', `/api/remote/issue-relationships?issue_id=${issueId}`)
+	}
+
+	async createIssueRelationship(body: {
+		issue_id: string
+		related_issue_id: string
+		relationship_type: 'blocking' | 'related' | 'has_duplicate'
+	}): Promise<MutationResponse<IssueRelationship>> {
+		return this.request('POST', '/api/remote/issue-relationships', body)
+	}
+
+	// -- Repos --
+
+	async listRepos(): Promise<Repo[]> {
+		return this.request('GET', '/api/repos')
+	}
+
+	async registerRepo(body: {
+		path: string
+		display_name?: string
+	}): Promise<Repo> {
+		return this.request('POST', '/api/repos', body)
+	}
+
+	async updateRepo(repoId: string, body: {
+		setup_script?: string
+		cleanup_script?: string
+		dev_server_script?: string
+	}): Promise<Repo> {
+		return this.request('PUT', `/api/repos/${repoId}`, body)
+	}
+
+	// -- Workspaces --
+
+	async listWorkspaces(): Promise<Workspace[]> {
+		return this.request('GET', '/api/workspaces')
+	}
+
+	async startWorkspace(body: CreateAndStartWorkspaceRequest): Promise<CreateAndStartWorkspaceResponse> {
+		return this.request('POST', '/api/workspaces/start', body)
+	}
+
+	async getWorkspaceRepos(workspaceId: string): Promise<Array<{ repo_id: string; target_branch: string }>> {
+		return this.request('GET', `/api/workspaces/${workspaceId}/repos`)
+	}
+}
