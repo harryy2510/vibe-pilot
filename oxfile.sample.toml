@@ -18,7 +18,7 @@ HOST = "0.0.0.0"
 
 [[apps]]
 name = "autopilot"
-cwd = "/home/ubuntu/workspace/harryy2510/vibe-pilot"
+cwd = "/path/to/vibe-pilot"
 command = "bun run src/index.ts"
 health_cmd = "curl -fsS http://localhost:4040"
 
