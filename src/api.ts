@@ -253,15 +253,15 @@ export class VkApi {
 		return this.request('PUT', `/api/repos/${repoId}`, body)
 	}
 
-	async setProjectDefaultRepos(projectId: string, repoIds: string[]): Promise<void> {
-		// Use the scratch pad to set default repos for a project
-		const payload = { repo_ids: repoIds }
+	async setProjectDefaultRepos(projectId: string, repos: Array<{ repo_id: string; target_branch: string }>): Promise<void> {
+		const payload = {
+			type: 'PROJECT_REPO_DEFAULTS' as const,
+			data: { repos },
+		}
 		try {
-			// Try to get existing scratch — if it exists, update it
 			await this.request('GET', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`)
 			await this.request('PUT', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`, { payload })
 		} catch {
-			// Create if doesn't exist
 			await this.request('POST', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`, { payload })
 		}
 	}

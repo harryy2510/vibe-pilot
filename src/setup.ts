@@ -88,7 +88,9 @@ export async function setupProject(
 	})
 
 	// Step 5: Link repo as default for this project
-	await api.setProjectDefaultRepos(vkProject.id, [repo.id]).catch(err => {
+	await api.setProjectDefaultRepos(vkProject.id, [
+		{ repo_id: repo.id, target_branch: config.defaults.target_branch },
+	]).catch(err => {
 		log.warn('Could not set default repo for project', { error: String(err) })
 	})
 
