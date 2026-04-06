@@ -3,20 +3,8 @@ import { join } from 'node:path'
 import type { AutopilotConfig, ProjectConfig, RoundRobinState } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
-import { pickFromPool } from './picker'
 
 const SATURDAY = 6
-
-function getWeekKey(): string {
-	const now = new Date()
-	const year = now.getFullYear()
-	const start = new Date(year, 0, 1)
-	const week = Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7)
-	return `${year}-W${week}`
-}
-
-// Track which projects already had a report task created this week
-const createdThisWeek = new Map<string, string>()
 
 export async function checkAndCreateReportTasks(
 	api: VkApi,
@@ -32,18 +20,15 @@ export async function checkAndCreateReportTasks(
 	// Only run on Saturdays
 	if (now.getDay() !== SATURDAY) return 0
 
-	// Only create one report task per project per week
-	const weekKey = getWeekKey()
-	const projectWeekKey = `${projectConfig.project_id}:${weekKey}`
-	if (createdThisWeek.has(projectWeekKey)) return 0
-
-	// Check if a status-update task already exists for this week (not Done)
+	// Check if a status-update task was already created this week (any status including Done)
 	const statusUpdateTagId = tagMap.get('status-update')
 	if (statusUpdateTagId) {
-		const doneStatusId = statusMap.get('done')
-		const allStatuses = [...statusMap.values()].filter(id => id !== doneStatusId)
+		// Get start of this week (Monday 00:00)
+		const weekStart = new Date(now)
+		weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+		weekStart.setHours(0, 0, 0, 0)
 
-		for (const statusId of allStatuses) {
+		for (const statusId of statusMap.values()) {
 			const { issues } = await api.searchIssues({
 				project_id: projectConfig.project_id,
 				status_id: statusId,
@@ -51,11 +36,9 @@ export async function checkAndCreateReportTasks(
 				limit: 5,
 			})
 
-			// If any non-done status-update task exists, skip
-			if (issues.length > 0) {
-				createdThisWeek.set(projectWeekKey, 'exists')
-				return 0
-			}
+			// Check if any were created this week
+			const thisWeek = issues.some(issue => new Date(issue.created_at) >= weekStart)
+			if (thisWeek) return 0
 		}
 	}
 
@@ -138,7 +121,6 @@ agent: Technical Writer
 			}
 		}
 
-		createdThisWeek.set(projectWeekKey, result.data.id)
 		log.info(`Created status report task: ${title}`, {
 			projectId: projectConfig.project_id,
 			hasTemplate,
