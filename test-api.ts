@@ -103,7 +103,8 @@ async function main() {
 	const oldWorkspaces = await localReq<Array<{ id: string; name: string | null }>>('GET', '/api/workspaces')
 	const testWorkspaces = oldWorkspaces.filter(w => w.name?.startsWith('test:'))
 	for (const w of testWorkspaces) {
-		console.log(`  Deleting old workspace: ${w.name}...`)
+		console.log(`  Stopping + deleting old workspace: ${w.name}...`)
+		await localReq('POST', `/api/workspaces/${w.id}/execution/stop`).catch(() => {})
 		await localReq('DELETE', `/api/workspaces/${w.id}?delete_branches=true`).catch(() => {})
 	}
 
@@ -328,7 +329,8 @@ agent: Senior Developer
 			})
 			workspaceId = result.workspace.id
 			cleanup.push(async () => {
-				console.log('  Deleting workspace...')
+				console.log('  Stopping + deleting workspace...')
+				await localReq('POST', `/api/workspaces/${workspaceId}/execution/stop`).catch(() => {})
 				await localReq('DELETE', `/api/workspaces/${workspaceId}?delete_branches=true`).catch(() => {})
 			})
 			return { workspaceId, status: result.execution_process.status }
