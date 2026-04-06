@@ -61,7 +61,9 @@ export async function checkAndCreateReportTasks(
 
 	if (hasTemplate) {
 		title = `Status Update — ${dateLong}`
-		description = `Generate the weekly status report for the week ending ${dateLong}.
+		description = `Follow the status-report skill.
+
+Generate the weekly status report for the week ending ${dateLong}.
 
 Gather data from:
 - Git commits (past 7 days)
@@ -79,7 +81,9 @@ agent: Technical Writer
 -->`
 	} else {
 		title = `Setup status report template — ${dateLong}`
-		description = `No status report template exists yet. Create one.
+		description = `Follow the status-report skill.
+
+No status report template exists yet. Create one.
 
 1. Scan the codebase for branding: package.json name, CSS variables, tailwind config, accent colors, fonts, light/dark theme
 2. Create docs/status-update-template.html using the project's branding
