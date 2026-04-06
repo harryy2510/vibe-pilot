@@ -117,7 +117,10 @@ export class VkApi {
 		color: string
 		sort_order: number
 	}): Promise<MutationResponse<ProjectStatus>> {
-		return this.remoteRequest('POST', '/v1/project_statuses', body)
+		return this.remoteRequest('POST', '/v1/project_statuses', {
+			...body,
+			hidden: false,
+		})
 	}
 
 	// -- Issues --

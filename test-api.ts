@@ -122,6 +122,7 @@ async function main() {
 			name: '_vp_test_status',
 			color: '0 0% 50%',
 			sort_order: 999,
+			hidden: false,
 		})
 		testStatusId = data.data.id
 		cleanup.push(async () => {
