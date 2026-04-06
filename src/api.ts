@@ -30,7 +30,16 @@ export class VkApi {
 			throw new Error(`VK API ${method} ${path} failed (${res.status}): ${text}`)
 		}
 
-		return res.json() as Promise<T>
+		// All local API responses are wrapped: { success, data, message?, error_data? }
+		const json = await res.json() as Record<string, unknown>
+
+		// If it has a `success` wrapper, unwrap `data`
+		if ('success' in json && 'data' in json) {
+			return json.data as T
+		}
+
+		// Some endpoints (health, etc.) return raw
+		return json as T
 	}
 
 	// -- Health --

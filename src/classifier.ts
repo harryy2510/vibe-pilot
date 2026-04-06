@@ -70,7 +70,7 @@ Project ID: ${projectConfig.project_id}`
 					target_branch: globalConfig.defaults.target_branch,
 				}],
 				linked_issue: {
-					remote_project_id: projectConfig.project_id,
+					project_id: projectConfig.project_id,
 					issue_id: issue.id,
 				},
 				executor_config: {
