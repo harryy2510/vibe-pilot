@@ -324,7 +324,6 @@ agent: Senior Developer
 				await localReq('PUT', `/api/workspaces/${workspaceId}`, { archived: true }).catch(() => {})
 			})
 			return { workspaceId, status: result.execution_process.status }
-			}
 		})
 
 		if (workspaceId) {
