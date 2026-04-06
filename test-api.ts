@@ -99,6 +99,14 @@ async function main() {
 	let projectId = ''
 	let projectCreated = false
 
+	// Delete old test workspaces
+	const oldWorkspaces = await localReq<Array<{ id: string; name: string | null }>>('GET', '/api/workspaces')
+	const testWorkspaces = oldWorkspaces.filter(w => w.name?.startsWith('test:'))
+	for (const w of testWorkspaces) {
+		console.log(`  Deleting old workspace: ${w.name}...`)
+		await localReq('DELETE', `/api/workspaces/${w.id}?delete_branches=true`).catch(() => {})
+	}
+
 	// Delete existing test-project to start fresh
 	const { projects: existingProjects } = await localReq<{ projects: Array<{ id: string; name: string }> }>('GET', `/api/remote/projects?organization_id=${orgId}`)
 	const oldProject = existingProjects.find(p => p.name.toLowerCase() === 'test-project')
@@ -320,8 +328,8 @@ agent: Senior Developer
 			})
 			workspaceId = result.workspace.id
 			cleanup.push(async () => {
-				console.log('  Archiving workspace...')
-				await localReq('PUT', `/api/workspaces/${workspaceId}`, { archived: true }).catch(() => {})
+				console.log('  Deleting workspace...')
+				await localReq('DELETE', `/api/workspaces/${workspaceId}?delete_branches=true`).catch(() => {})
 			})
 			return { workspaceId, status: result.execution_process.status }
 		})
