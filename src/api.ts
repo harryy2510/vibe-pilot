@@ -131,13 +131,14 @@ export class VkApi {
 		})
 	}
 
-	async updateProjectStatus(statusId: string, body: {
-		hidden?: boolean
-		name?: string
-		color?: string
-		sort_order?: number
-	}): Promise<MutationResponse<ProjectStatus>> {
-		return this.remoteRequest('PATCH', `/v1/project_statuses/${statusId}`, body)
+	async bulkUpdateProjectStatuses(updates: Array<{
+		id: string
+		name?: string | null
+		color?: string | null
+		sort_order?: number | null
+		hidden?: boolean | null
+	}>): Promise<void> {
+		await this.remoteRequest('POST', '/v1/project_statuses/bulk', { updates })
 	}
 
 	// -- Issues --
@@ -242,17 +243,27 @@ export class VkApi {
 	}
 
 	async updateRepo(repoId: string, body: {
-		setup_script?: string
-		cleanup_script?: string
-		dev_server_script?: string
+		display_name?: string | null
+		setup_script?: string | null
+		cleanup_script?: string | null
+		dev_server_script?: string | null
+		copy_files?: string | null
+		default_target_branch?: string | null
 	}): Promise<Repo> {
 		return this.request('PUT', `/api/repos/${repoId}`, body)
 	}
 
-	async addDefaultRepo(projectId: string, repoId: string): Promise<void> {
-		await this.request('POST', `/api/projects/${projectId}/default-repos`, {
-			repo_id: repoId,
-		})
+	async setProjectDefaultRepos(projectId: string, repoIds: string[]): Promise<void> {
+		// Use the scratch pad to set default repos for a project
+		const payload = { repo_ids: repoIds }
+		try {
+			// Try to get existing scratch — if it exists, update it
+			await this.request('GET', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`)
+			await this.request('PUT', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`, { payload })
+		} catch {
+			// Create if doesn't exist
+			await this.request('POST', `/api/scratch/PROJECT_REPO_DEFAULTS/${projectId}`, { payload })
+		}
 	}
 
 	// -- Workspaces --

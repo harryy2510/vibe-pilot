@@ -78,16 +78,18 @@ export async function setupProject(
 	// Step 3: Ensure vibe scripts exist in target repo's package.json
 	ensureVibeScripts(project.path, config)
 
-	// Step 4: Update repo scripts
+	// Step 4: Update repo scripts and settings
 	await api.updateRepo(repo.id, {
 		setup_script: config.defaults.setup_script,
 		cleanup_script: config.defaults.cleanup_script,
 		dev_server_script: config.defaults.dev_script,
+		copy_files: config.defaults.copy_files.join(','),
+		default_target_branch: config.defaults.target_branch,
 	})
 
 	// Step 5: Link repo as default for this project
-	await api.addDefaultRepo(vkProject.id, repo.id).catch(err => {
-		log.warn('Could not link default repo (may already be linked)', { error: String(err) })
+	await api.setProjectDefaultRepos(vkProject.id, [repo.id]).catch(err => {
+		log.warn('Could not set default repo for project', { error: String(err) })
 	})
 
 	// Step 6: Ensure Backlog is visible and Triage status exists
@@ -122,7 +124,7 @@ export async function ensureBacklogVisible(api: VkApi, projectId: string): Promi
 	const raw = backlog as ProjectStatus & { hidden?: boolean }
 	if (raw.hidden === true) {
 		try {
-			await api.updateProjectStatus(backlog.id, { hidden: false })
+			await api.bulkUpdateProjectStatuses([{ id: backlog.id, hidden: false }])
 			log.info('Enabled Backlog status', { projectId })
 		} catch (err) {
 			log.warn('Could not enable Backlog status', { projectId, error: String(err) })
