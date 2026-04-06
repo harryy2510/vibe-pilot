@@ -2,7 +2,7 @@ import type { AutopilotConfig, RoundRobinState } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
 import { discoverProjects, isConfigComplete } from './discover'
-import { fixIncompleteConfig } from './setup'
+import { fixIncompleteConfig, gitCommitAndPush } from './setup'
 import { classifyBacklogTasks } from './classifier'
 import { pickAndStartTasks, startTriageWorkspaces } from './picker'
 import { checkAndCreateReportTasks } from './reporter'
@@ -57,6 +57,9 @@ export async function runCycle(
 				log.info(`Skipping ${projectName} — not set up in vibe-kanban`)
 				continue
 			}
+
+			// Commit and push any uncommitted config files (vibe-kanban.json, package.json)
+			gitCommitAndPush(project.path, ['vibe-kanban.json', 'package.json'], 'chore: add vibe-kanban config')
 
 			// Build status map for this project
 			const { project_statuses: statuses } = await api.listProjectStatuses(projectConfig.project_id)

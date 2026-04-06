@@ -6,7 +6,7 @@ import type { AutopilotConfig, DiscoveredProject, ProjectConfig, ProjectStatus }
 import type { VkApi } from './api'
 import { log } from './logger'
 
-function gitCommitAndPush(repoPath: string, files: string[], message: string): void {
+export function gitCommitAndPush(repoPath: string, files: string[], message: string): void {
 	try {
 		const opts = { cwd: repoPath, stdio: 'pipe' as const }
 		for (const file of files) {
