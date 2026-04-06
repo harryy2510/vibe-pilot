@@ -100,11 +100,11 @@ export async function ensureTriageStatus(api: VkApi, projectId: string): Promise
 
 	let sortOrder: number
 	if (backlog && todo) {
-		sortOrder = (backlog.sort_order + todo.sort_order) / 2
+		sortOrder = Math.round((backlog.sort_order + todo.sort_order) / 2)
 	} else if (backlog) {
 		sortOrder = backlog.sort_order + 1
 	} else {
-		sortOrder = 0.5
+		sortOrder = 1
 	}
 
 	try {

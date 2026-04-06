@@ -248,7 +248,7 @@ Target Branch: ${targetBranch}`
 					target_branch: targetBranch,
 				}],
 				linked_issue: {
-					project_id: projectConfig.project_id,
+					remote_project_id: projectConfig.project_id,
 					issue_id: task.id,
 				},
 				executor_config: {
@@ -320,7 +320,7 @@ Project ID: ${projectConfig.project_id}`
 					target_branch: globalConfig.defaults.target_branch,
 				}],
 				linked_issue: {
-					project_id: projectConfig.project_id,
+					remote_project_id: projectConfig.project_id,
 					issue_id: task.id,
 				},
 				executor_config: {

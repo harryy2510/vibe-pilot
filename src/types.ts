@@ -152,7 +152,7 @@ export type WorkspaceRepoInput = {
 }
 
 export type LinkedIssueInfo = {
-	project_id: string
+	remote_project_id: string
 	issue_id: string
 }
 
