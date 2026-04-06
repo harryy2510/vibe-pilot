@@ -34,7 +34,7 @@ export async function classifyBacklogTasks(
 	const { issues } = await api.searchIssues({
 		project_id: projectConfig.project_id,
 		status_id: backlogStatusId,
-		sort_field: 'SortOrder',
+		sort_field: 'sort_order',
 		sort_direction: 'Asc',
 		limit: 10,
 	})

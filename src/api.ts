@@ -75,14 +75,9 @@ export class VkApi {
 		return this.request('GET', `/api/remote/project-statuses?project_id=${projectId}`)
 	}
 
-	async createProjectStatus(body: {
-		project_id: string
-		name: string
-		color: string
-		sort_order: number
-	}): Promise<MutationResponse<ProjectStatus>> {
-		return this.request('POST', '/api/remote/project-statuses', body)
-	}
+	// NOTE: Creating project statuses requires the remote API (/v1/...) with auth.
+	// The local server only proxies GET. Tags and statuses must be created via
+	// the vibe-kanban UI or remote API directly.
 
 	// -- Issues --
 
@@ -107,7 +102,10 @@ export class VkApi {
 		priority?: string
 		sort_order: number
 	}): Promise<MutationResponse<Issue>> {
-		return this.request('POST', '/api/remote/issues', body)
+		return this.request('POST', '/api/remote/issues', {
+			...body,
+			extension_metadata: {},
+		})
 	}
 
 	async updateIssue(issueId: string, body: {
@@ -130,17 +128,8 @@ export class VkApi {
 		return this.request('GET', `/api/remote/tags?project_id=${projectId}`)
 	}
 
-	async createTag(body: {
-		project_id: string
-		name: string
-		color: string
-	}): Promise<MutationResponse<Tag>> {
-		return this.request('POST', '/api/remote/tags', body)
-	}
-
-	async deleteTag(tagId: string): Promise<void> {
-		await this.request('DELETE', `/api/remote/tags/${tagId}`)
-	}
+	// NOTE: Creating/deleting tags requires the remote API (/v1/...) with auth.
+	// The local server only proxies GET. Tags must be created via the vibe-kanban UI.
 
 	// -- Issue Tags --
 

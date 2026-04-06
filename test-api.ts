@@ -10,8 +10,6 @@ const BASE = 'http://localhost:4040'
 
 type TestResult = { name: string; ok: boolean; error?: string; data?: unknown }
 const results: TestResult[] = []
-
-// Track IDs for cleanup
 const cleanup: Array<() => Promise<void>> = []
 
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -23,15 +21,11 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
 	const text = await res.text()
 	if (!res.ok) throw new Error(`${method} ${path} → ${res.status}: ${text}`)
 	if (!text) return null as T
-
 	const json = JSON.parse(text)
-
-	// All local API responses are wrapped: { success, data }
 	if ('success' in json && 'data' in json) {
 		if (!json.success) throw new Error(`${method} ${path} → success=false: ${json.message ?? JSON.stringify(json)}`)
 		return json.data as T
 	}
-
 	return json as T
 }
 
@@ -86,7 +80,7 @@ async function main() {
 		return { id: data.id, name: data.name }
 	})
 
-	// ── 4. Project Statuses ──
+	// ── 4. Project Statuses (read-only via local API) ──
 	console.log('\nProject Statuses')
 	const statusMap: Record<string, string> = {}
 	await test('GET /api/remote/project-statuses?project_id=...', async () => {
@@ -97,41 +91,18 @@ async function main() {
 		return { count: data.project_statuses.length, statuses: data.project_statuses.map(s => s.name) }
 	})
 
-	let testStatusId = ''
-	await test('POST /api/remote/project-statuses (create test status)', async () => {
-		const data = await req<{ data: { id: string; name: string } }>('POST', '/api/remote/project-statuses', {
-			project_id: projectId,
-			name: '_vp_test_status',
-			color: '0 0% 50%',
-			sort_order: 999,
-		})
-		testStatusId = data.data.id
-		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/project-statuses/${testStatusId}`).catch(() => {})
-		})
-		return { id: testStatusId }
-	})
+	// NOTE: POST/PUT/DELETE for project-statuses requires remote API with auth — not available via local proxy
 
-	// ── 5. Tags ──
+	// ── 5. Tags (read-only via local API) ──
 	console.log('\nTags')
-	let testTagId = ''
+	let existingTagId = ''
 	await test('GET /api/remote/tags?project_id=...', async () => {
 		const data = await req<{ tags: Array<{ id: string; name: string }> }>('GET', `/api/remote/tags?project_id=${projectId}`)
+		if (data.tags.length > 0) existingTagId = data.tags[0]!.id
 		return { count: data.tags.length, tags: data.tags.map(t => t.name) }
 	})
 
-	await test('POST /api/remote/tags (create test tag)', async () => {
-		const data = await req<{ data: { id: string; name: string } }>('POST', '/api/remote/tags', {
-			project_id: projectId,
-			name: '_vp_test_tag',
-			color: '0 0% 50%',
-		})
-		testTagId = data.data.id
-		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/tags/${testTagId}`).catch(() => {})
-		})
-		return { id: testTagId }
-	})
+	// NOTE: POST/DELETE for tags requires remote API with auth — not available via local proxy
 
 	// ── 6. Issues ──
 	console.log('\nIssues')
@@ -146,6 +117,7 @@ async function main() {
 			description: 'Test issue created by vibe-pilot API smoke test. Will be deleted.',
 			priority: 'low',
 			sort_order: 999,
+			extension_metadata: {},
 		})
 		testIssueId = data.data.id
 		cleanup.push(async () => {
@@ -154,87 +126,102 @@ async function main() {
 		return { id: testIssueId }
 	})
 
-	await test('GET /api/remote/issues/{id}', async () => {
-		const data = await req<{ id: string; title: string }>('GET', `/api/remote/issues/${testIssueId}`)
-		return { id: data.id, title: data.title }
-	})
+	if (testIssueId) {
+		await test('GET /api/remote/issues/{id}', async () => {
+			const data = await req<{ id: string; title: string }>('GET', `/api/remote/issues/${testIssueId}`)
+			return { id: data.id, title: data.title }
+		})
+	}
 
 	await test('POST /api/remote/issues/search', async () => {
 		const data = await req<{ issues: unknown[]; total_count: number }>('POST', '/api/remote/issues/search', {
 			project_id: projectId,
 			status_id: todoStatusId,
-			sort_field: 'SortOrder',
+			sort_field: 'sort_order',
 			sort_direction: 'Asc',
 			limit: 5,
 		})
 		return { count: data.total_count, returned: data.issues.length }
 	})
 
-	await test('PATCH /api/remote/issues/{id} (update)', async () => {
-		const data = await req<{ data: { id: string; title: string } }>('PATCH', `/api/remote/issues/${testIssueId}`, {
-			title: '_vp_test_issue_updated',
-			priority: 'medium',
+	if (testIssueId) {
+		await test('PATCH /api/remote/issues/{id} (update)', async () => {
+			const data = await req<{ data: { id: string; title: string } }>('PATCH', `/api/remote/issues/${testIssueId}`, {
+				title: '_vp_test_issue_updated',
+				priority: 'medium',
+			})
+			return { id: data.data.id, title: data.data.title }
 		})
-		return { id: data.data.id, title: data.data.title }
-	})
+	}
 
 	// ── 7. Issue Tags ──
 	console.log('\nIssue Tags')
 	let testIssueTagId = ''
 
-	await test('POST /api/remote/issue-tags (add tag to issue)', async () => {
-		const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-tags', {
-			issue_id: testIssueId,
-			tag_id: testTagId,
+	if (testIssueId && existingTagId) {
+		await test('POST /api/remote/issue-tags (add tag to issue)', async () => {
+			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-tags', {
+				issue_id: testIssueId,
+				tag_id: existingTagId,
+			})
+			testIssueTagId = data.data.id
+			cleanup.push(async () => {
+				await req('DELETE', `/api/remote/issue-tags/${testIssueTagId}`).catch(() => {})
+			})
+			return { issueTagId: testIssueTagId }
 		})
-		testIssueTagId = data.data.id
-		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/issue-tags/${testIssueTagId}`).catch(() => {})
-		})
-		return { issueTagId: testIssueTagId }
-	})
 
-	await test('GET /api/remote/issue-tags?issue_id=...', async () => {
-		const data = await req<{ issue_tags: Array<{ id: string; tag_id: string }> }>('GET', `/api/remote/issue-tags?issue_id=${testIssueId}`)
-		return { count: data.issue_tags.length }
-	})
+		await test('GET /api/remote/issue-tags?issue_id=...', async () => {
+			const data = await req<{ issue_tags: Array<{ id: string; tag_id: string }> }>('GET', `/api/remote/issue-tags?issue_id=${testIssueId}`)
+			return { count: data.issue_tags.length }
+		})
+	} else {
+		console.log('  ⏭ Skipping issue-tags (no test issue or no existing tags)')
+	}
 
 	// ── 8. Issue Relationships ──
 	console.log('\nIssue Relationships')
 	let testIssue2Id = ''
 	let testRelId = ''
 
-	await test('POST /api/remote/issues (create 2nd issue for relationship)', async () => {
-		const data = await req<{ data: { id: string } }>('POST', '/api/remote/issues', {
-			project_id: projectId,
-			status_id: todoStatusId,
-			title: '_vp_test_issue_2',
-			sort_order: 998,
+	if (testIssueId) {
+		await test('POST /api/remote/issues (create 2nd issue for relationship)', async () => {
+			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issues', {
+				project_id: projectId,
+				status_id: todoStatusId,
+				title: '_vp_test_issue_2',
+				sort_order: 998,
+				extension_metadata: {},
+			})
+			testIssue2Id = data.data.id
+			cleanup.push(async () => {
+				await req('DELETE', `/api/remote/issues/${testIssue2Id}`).catch(() => {})
+			})
+			return { id: testIssue2Id }
 		})
-		testIssue2Id = data.data.id
-		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/issues/${testIssue2Id}`).catch(() => {})
-		})
-		return { id: testIssue2Id }
-	})
+	}
 
-	await test('POST /api/remote/issue-relationships (blocking)', async () => {
-		const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-relationships', {
-			issue_id: testIssueId,
-			related_issue_id: testIssue2Id,
-			relationship_type: 'blocking',
+	if (testIssueId && testIssue2Id) {
+		await test('POST /api/remote/issue-relationships (blocking)', async () => {
+			const data = await req<{ data: { id: string } }>('POST', '/api/remote/issue-relationships', {
+				issue_id: testIssueId,
+				related_issue_id: testIssue2Id,
+				relationship_type: 'blocking',
+			})
+			testRelId = data.data.id
+			cleanup.push(async () => {
+				await req('DELETE', `/api/remote/issue-relationships/${testRelId}`).catch(() => {})
+			})
+			return { id: testRelId }
 		})
-		testRelId = data.data.id
-		cleanup.push(async () => {
-			await req('DELETE', `/api/remote/issue-relationships/${testRelId}`).catch(() => {})
-		})
-		return { id: testRelId }
-	})
 
-	await test('GET /api/remote/issue-relationships?issue_id=...', async () => {
-		const data = await req<{ issue_relationships: Array<{ id: string; relationship_type: string }> }>('GET', `/api/remote/issue-relationships?issue_id=${testIssue2Id}`)
-		return { count: data.issue_relationships.length }
-	})
+		await test('GET /api/remote/issue-relationships?issue_id=...', async () => {
+			const data = await req<{ issue_relationships: Array<{ id: string; relationship_type: string }> }>('GET', `/api/remote/issue-relationships?issue_id=${testIssue2Id}`)
+			return { count: data.issue_relationships.length }
+		})
+	} else {
+		console.log('  ⏭ Skipping relationships (no test issues)')
+	}
 
 	// ── 9. Repos ──
 	console.log('\nRepos')
@@ -253,11 +240,7 @@ async function main() {
 	// ── Cleanup ──
 	console.log('\nCleanup')
 	for (const fn of cleanup.reverse()) {
-		try {
-			await fn()
-		} catch (err) {
-			console.log(`  ⚠ cleanup failed: ${err}`)
-		}
+		try { await fn() } catch (err) { console.log(`  ⚠ cleanup failed: ${err}`) }
 	}
 	console.log(`  Cleaned up ${cleanup.length} test resources`)
 
@@ -267,22 +250,16 @@ async function main() {
 function printSummary() {
 	const passed = results.filter(r => r.ok).length
 	const failed = results.filter(r => !r.ok).length
-
 	console.log('\n━━━ Summary ━━━')
 	console.log(`  ${passed} passed, ${failed} failed, ${results.length} total`)
-
 	if (failed > 0) {
 		console.log('\nFailed:')
 		for (const r of results.filter(r => !r.ok)) {
 			console.log(`  ✗ ${r.name}: ${r.error}`)
 		}
 	}
-
 	console.log('')
 	process.exit(failed > 0 ? 1 : 0)
 }
 
-main().catch(err => {
-	console.error('Fatal:', err)
-	process.exit(1)
-})
+main().catch(err => { console.error('Fatal:', err); process.exit(1) })

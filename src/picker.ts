@@ -171,7 +171,7 @@ export async function pickAndStartTasks(
 	const { issues: todoTasks } = await api.searchIssues({
 		project_id: projectConfig.project_id,
 		status_id: todoId,
-		sort_field: 'SortOrder',
+		sort_field: 'sort_order',
 		sort_direction: 'Asc',
 		limit: 20,
 	})
@@ -285,7 +285,7 @@ export async function startTriageWorkspaces(
 	const { issues: triageTasks } = await api.searchIssues({
 		project_id: projectConfig.project_id,
 		status_id: triageId,
-		sort_field: 'SortOrder',
+		sort_field: 'sort_order',
 		sort_direction: 'Asc',
 		limit: 10,
 	})
