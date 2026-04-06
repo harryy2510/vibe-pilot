@@ -5,7 +5,7 @@ import { log } from './logger'
 import type { RoundRobinState } from './types'
 
 async function main() {
-	log.info('vkvk autopilot starting')
+	log.info('vibe-pilot starting')
 
 	const config = loadConfig()
 	const api = new VkApi(config.vk_api)

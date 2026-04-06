@@ -1,4 +1,4 @@
-# vkvk Autopilot Implementation Plan
+# vibe-pilot Autopilot Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -15,7 +15,7 @@
 ## File Structure
 
 ```
-vkvk/
+vibe-pilot/
 ├── oxfile.toml                    # oxmgr: runs vibe-kanban + autopilot
 ├── autopilot.config.json          # runtime config (workspace, org, models)
 ├── package.json                   # bun project metadata
@@ -43,14 +43,14 @@ vkvk/
 ### Task 1: Project Scaffolding
 
 **Files:**
-- Create: `vkvk/package.json`
-- Create: `vkvk/tsconfig.json`
+- Create: `vibe-pilot/package.json`
+- Create: `vibe-pilot/tsconfig.json`
 
 - [ ] **Step 1: Create package.json**
 
 ```json
 {
-  "name": "vkvk",
+  "name": "vibe-pilot",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -83,13 +83,13 @@ vkvk/
 
 - [ ] **Step 3: Install bun-types**
 
-Run: `cd vkvk && bun add -d bun-types`
+Run: `cd vibe-pilot && bun add -d bun-types`
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add package.json tsconfig.json bun.lock
-git commit -m "feat: scaffold vkvk autopilot project"
+git commit -m "feat: scaffold vibe-pilot autopilot project"
 ```
 
 ---
@@ -97,7 +97,7 @@ git commit -m "feat: scaffold vkvk autopilot project"
 ### Task 2: Types
 
 **Files:**
-- Create: `vkvk/src/types.ts`
+- Create: `vibe-pilot/src/types.ts`
 
 All TypeScript types for the project. No runtime code — just type definitions.
 
@@ -310,7 +310,7 @@ git commit -m "feat: add all TypeScript type definitions"
 ### Task 3: Logger
 
 **Files:**
-- Create: `vkvk/src/logger.ts`
+- Create: `vibe-pilot/src/logger.ts`
 
 Simple structured logger. Timestamps + project context.
 
@@ -347,8 +347,8 @@ git commit -m "feat: add structured logger"
 ### Task 4: Config Loader
 
 **Files:**
-- Create: `vkvk/src/config.ts`
-- Create: `vkvk/autopilot.config.json`
+- Create: `vibe-pilot/src/config.ts`
+- Create: `vibe-pilot/autopilot.config.json`
 
 - [ ] **Step 1: Create config.ts**
 
@@ -452,7 +452,7 @@ git commit -m "feat: add config loader with validation and defaults"
 ### Task 5: Vibe-Kanban API Client
 
 **Files:**
-- Create: `vkvk/src/api.ts`
+- Create: `vibe-pilot/src/api.ts`
 
 Thin fetch wrapper around the vibe-kanban HTTP API. Every method maps 1:1 to an endpoint.
 
@@ -671,7 +671,7 @@ git commit -m "feat: add vibe-kanban HTTP API client"
 ### Task 6: Project Discovery
 
 **Files:**
-- Create: `vkvk/src/discover.ts`
+- Create: `vibe-pilot/src/discover.ts`
 
 Scans the workspace folder for git repos and reads their `vibe-kanban.json`.
 
@@ -758,7 +758,7 @@ git commit -m "feat: add project discovery — scan workspace for git repos"
 ### Task 7: Project Setup
 
 **Files:**
-- Create: `vkvk/src/setup.ts`
+- Create: `vibe-pilot/src/setup.ts`
 
 Creates project, repo, tags, statuses in vibe-kanban. Writes `vibe-kanban.json`.
 
@@ -963,7 +963,7 @@ git commit -m "feat: add project setup — tags, statuses, repo scripts, vibe-ka
 ### Task 8: Classifier (Backlog → Triage / To Do)
 
 **Files:**
-- Create: `vkvk/src/classifier.ts`
+- Create: `vibe-pilot/src/classifier.ts`
 
 Starts a Haiku workspace for each backlog task to classify it as simple or complex.
 
@@ -1066,7 +1066,7 @@ git commit -m "feat: add classifier — start Haiku workspace for backlog tasks"
 ### Task 9: Task Picker (To Do → In Progress)
 
 **Files:**
-- Create: `vkvk/src/picker.ts`
+- Create: `vibe-pilot/src/picker.ts`
 
 Picks tasks from To Do, resolves stacking dependencies, starts implementation workspaces.
 
@@ -1445,7 +1445,7 @@ git commit -m "feat: add task picker with stacking, migration guards, and round-
 ### Task 10: Cycle Orchestrator
 
 **Files:**
-- Create: `vkvk/src/cycle.ts`
+- Create: `vibe-pilot/src/cycle.ts`
 
 Runs one complete cron cycle: discover → setup → classify → triage → pick.
 
@@ -1550,7 +1550,7 @@ git commit -m "feat: add cycle orchestrator — discover, setup, classify, pick"
 ### Task 11: Entry Point
 
 **Files:**
-- Create: `vkvk/src/index.ts`
+- Create: `vibe-pilot/src/index.ts`
 
 Main entry point. Loads config, starts the interval loop.
 
@@ -1564,7 +1564,7 @@ import { log } from './logger'
 import type { RoundRobinState } from './types'
 
 async function main() {
-	log.info('vkvk autopilot starting')
+	log.info('vibe-pilot autopilot starting')
 
 	const config = loadConfig()
 	const api = new VkApi(config.vk_api)
@@ -1601,7 +1601,7 @@ main().catch(err => {
 
 - [ ] **Step 2: Run to verify it starts**
 
-Run: `cd vkvk && bun run src/index.ts`
+Run: `cd vibe-pilot && bun run src/index.ts`
 Expected: Starts, logs config, runs first cycle (will fail health check if vibe-kanban isn't running — that's fine), then continues interval.
 
 - [ ] **Step 3: Commit**
@@ -1616,7 +1616,7 @@ git commit -m "feat: add entry point with setInterval loop"
 ### Task 12: oxfile.toml
 
 **Files:**
-- Create: `vkvk/oxfile.toml`
+- Create: `vibe-pilot/oxfile.toml`
 
 Combined process management for vibe-kanban + autopilot.
 
@@ -1662,7 +1662,7 @@ git commit -m "feat: add oxfile.toml — vibe-kanban + autopilot process managem
 ### Task 13: Classify Skill
 
 **Files:**
-- Create: `vkvk/skills/classify.md`
+- Create: `vibe-pilot/skills/classify.md`
 
 Skill for Haiku to classify backlog tasks as simple or complex.
 
@@ -1761,7 +1761,7 @@ git commit -m "feat: add classify skill for backlog task classification"
 ### Task 14: Triage Skill
 
 **Files:**
-- Create: `vkvk/skills/triage.md`
+- Create: `vibe-pilot/skills/triage.md`
 
 Skill for Opus to brainstorm with the user and break down complex tasks.
 
@@ -1872,7 +1872,7 @@ git commit -m "feat: add triage skill for brainstorming and task breakdown"
 ### Task 15: Implement Skill
 
 **Files:**
-- Create: `vkvk/skills/implement.md`
+- Create: `vibe-pilot/skills/implement.md`
 
 Skill for the assigned model to implement a task and create a PR.
 
@@ -1950,7 +1950,7 @@ git commit -m "feat: add implement skill — code, PR, and issue linking"
 ### Task 16: Model-Agent Reference Skill
 
 **Files:**
-- Create: `vkvk/skills/model-agent-ref.md`
+- Create: `vibe-pilot/skills/model-agent-ref.md`
 
 Lookup table for task type → tier + agent mapping.
 
@@ -2031,38 +2031,38 @@ git commit -m "feat: add model-agent reference skill — tier and agent lookup t
 
 - [ ] **Step 1: Verify file structure**
 
-Run: `find vkvk -type f | sort`
+Run: `find vibe-pilot -type f | sort`
 
 Expected output:
 ```
-vkvk/autopilot.config.json
-vkvk/oxfile.toml
-vkvk/package.json
-vkvk/src/api.ts
-vkvk/src/classifier.ts
-vkvk/src/config.ts
-vkvk/src/cycle.ts
-vkvk/src/discover.ts
-vkvk/src/index.ts
-vkvk/src/logger.ts
-vkvk/src/picker.ts
-vkvk/src/setup.ts
-vkvk/src/types.ts
-vkvk/skills/classify.md
-vkvk/skills/implement.md
-vkvk/skills/model-agent-ref.md
-vkvk/skills/triage.md
-vkvk/tsconfig.json
+vibe-pilot/autopilot.config.json
+vibe-pilot/oxfile.toml
+vibe-pilot/package.json
+vibe-pilot/src/api.ts
+vibe-pilot/src/classifier.ts
+vibe-pilot/src/config.ts
+vibe-pilot/src/cycle.ts
+vibe-pilot/src/discover.ts
+vibe-pilot/src/index.ts
+vibe-pilot/src/logger.ts
+vibe-pilot/src/picker.ts
+vibe-pilot/src/setup.ts
+vibe-pilot/src/types.ts
+vibe-pilot/skills/classify.md
+vibe-pilot/skills/implement.md
+vibe-pilot/skills/model-agent-ref.md
+vibe-pilot/skills/triage.md
+vibe-pilot/tsconfig.json
 ```
 
 - [ ] **Step 2: Type check**
 
-Run: `cd vkvk && bunx tsc --noEmit`
+Run: `cd vibe-pilot && bunx tsc --noEmit`
 Expected: No errors
 
 - [ ] **Step 3: Test startup**
 
-Run: `cd vkvk && timeout 5 bun run src/index.ts || true`
+Run: `cd vibe-pilot && timeout 5 bun run src/index.ts || true`
 Expected: Logs config loaded, attempts health check, either runs cycle or logs warning about API being unreachable.
 
 - [ ] **Step 4: Final commit if any fixes needed**

@@ -1,4 +1,4 @@
-# vkvk Autopilot — Design Spec
+# vibe-pilot Autopilot — Design Spec
 
 **Date:** 2026-04-06
 **Status:** Approved
@@ -369,7 +369,7 @@ AUTOPILOT_CONFIG = "./autopilot.config.json"
 ## Project Structure
 
 ```
-vkvk/
+vibe-pilot/
 ├── oxfile.toml
 ├── autopilot.config.json
 ├── package.json
