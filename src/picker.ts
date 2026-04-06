@@ -52,6 +52,7 @@ async function isTaskBlocked(
 	issueId: string,
 	stackPrs: boolean,
 	statusMap: Map<string, string>,
+	workspaceBranches: Map<string, string>,
 ): Promise<{ blocked: boolean; baseBranch: string | null }> {
 	const { issue_relationships: rels } = await api.listIssueRelationships(issueId)
 
@@ -79,7 +80,7 @@ async function isTaskBlocked(
 
 			// If blocker is in progress or in review, find its branch for stacking
 			if (blockerIssue.status_id !== doneStatusId) {
-				const branch = await findWorkspaceBranch(api, blocker.issue_id)
+				const branch = findWorkspaceBranch(blockerIssue.title, workspaceBranches)
 				if (branch) return { blocked: false, baseBranch: branch }
 			}
 		} else {
@@ -94,12 +95,14 @@ async function isTaskBlocked(
 }
 
 // ── Find workspace branch for stacking ──
+// Match by workspace name (set to task title when we start workspaces)
+// Branch is on the workspace object itself (e.g. "vk/38c3-test-hello-world")
 
-async function findWorkspaceBranch(_api: VkApi, _issueId: string): Promise<string | null> {
-	// TODO: vibe-kanban API needs a way to find workspace by linked issue
-	// For now, return null — stacked tasks will use the default branch
-	// This will be implemented once we discover the right API endpoint
-	return null
+function findWorkspaceBranch(
+	taskTitle: string,
+	workspaceBranches: Map<string, string>,
+): string | null {
+	return workspaceBranches.get(taskTitle) ?? null
 }
 
 // ── Check migration constraints ──
@@ -144,6 +147,7 @@ export async function pickAndStartTasks(
 	rrState: RoundRobinState,
 	statusMap: Map<string, string>,
 	tagMap: Map<string, string>,
+	workspaceBranches: Map<string, string>,
 ): Promise<number> {
 	const concurrency = projectConfig.concurrency ?? globalConfig.defaults.concurrency
 	const stackPrs = projectConfig.stack_prs ?? globalConfig.defaults.stack_prs
@@ -208,7 +212,7 @@ export async function pickAndStartTasks(
 		}
 
 		// Check blocked_by relationships
-		const { blocked, baseBranch } = await isTaskBlocked(api, task.id, stackPrs, statusMap)
+		const { blocked, baseBranch } = await isTaskBlocked(api, task.id, stackPrs, statusMap, workspaceBranches)
 		if (blocked) {
 			log.info(`Skipping task with unresolved dependencies: ${task.title}`)
 			continue
@@ -288,6 +292,7 @@ export async function startTriageWorkspaces(
 	globalConfig: AutopilotConfig,
 	rrState: RoundRobinState,
 	statusMap: Map<string, string>,
+	activeWorkspaceNames: Set<string>,
 ): Promise<number> {
 	const triageId = statusMap.get('triage')
 	if (!triageId) return 0
@@ -306,6 +311,13 @@ export async function startTriageWorkspaces(
 
 	for (const task of triageTasks) {
 		if (started >= 1) break
+
+		// Skip if a workspace is already running for this task
+		const wsName = `Triage: ${task.title}`
+		if (activeWorkspaceNames.has(wsName)) {
+			log.info(`Skipping already-triaging task: ${task.title}`)
+			continue
+		}
 
 		const { executor, model } = pickFromPool(globalConfig.models, 'high', rrState)
 

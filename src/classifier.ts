@@ -1,21 +1,7 @@
-import type { AutopilotConfig, ModelPools, ProjectConfig, RoundRobinState } from './types'
+import type { AutopilotConfig, ProjectConfig, RoundRobinState } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
-
-function pickFromPool(
-	pools: ModelPools,
-	tier: 'low' | 'medium' | 'high',
-	state: RoundRobinState,
-): { executor: string; model: string } {
-	const pool = pools[tier]
-	if (!pool.length) throw new Error(`Empty model pool for tier: ${tier}`)
-
-	const index = state[tier] % pool.length
-	state[tier] = index + 1
-
-	const entry = pool[index]!
-	return { executor: entry.executor, model: entry.model }
-}
+import { pickFromPool } from './picker'
 
 export async function classifyBacklogTasks(
 	api: VkApi,
@@ -23,6 +9,7 @@ export async function classifyBacklogTasks(
 	globalConfig: AutopilotConfig,
 	rrState: RoundRobinState,
 	statusMap: Map<string, string>,
+	activeWorkspaceNames: Set<string>,
 ): Promise<number> {
 	const backlogStatusId = statusMap.get('backlog')
 	if (!backlogStatusId) {
@@ -47,6 +34,13 @@ export async function classifyBacklogTasks(
 		// Start one classify workspace at a time to avoid overwhelming
 		if (started >= 1) break
 
+		// Skip if a workspace is already running for this task
+		const wsName = `Classify: ${issue.title}`
+		if (activeWorkspaceNames.has(wsName)) {
+			log.info(`Skipping already-classifying task: ${issue.title}`)
+			continue
+		}
+
 		const { executor, model } = pickFromPool(globalConfig.models, 'low', rrState)
 
 		log.info(`Classifying backlog task: ${issue.title}`, {
@@ -65,6 +59,7 @@ Project ID: ${projectConfig.project_id}`
 
 		try {
 			const { workspace } = await api.startWorkspace({
+				name: wsName,
 				repos: [{
 					repo_id: projectConfig.repo_id,
 					target_branch: globalConfig.defaults.target_branch,

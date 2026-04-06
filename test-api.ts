@@ -360,6 +360,7 @@ agent: Senior Developer
 			await test('GET /api/workspaces/{id}/repos', async () => {
 				return await localReq<Array<{ repo_id: string; target_branch: string }>>('GET', `/api/workspaces/${workspaceId}/repos`)
 			})
+
 		}
 	} else if (SKIP_WORKSPACE) {
 		console.log('\n7. Workspace start SKIPPED (--no-workspace)')

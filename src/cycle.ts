@@ -28,6 +28,21 @@ export async function runCycle(
 		return
 	}
 
+	// Fetch active workspaces once for dedup + branch lookup across all projects
+	let activeWorkspaceNames = new Set<string>()
+	const workspaceBranches = new Map<string, string>() // name → branch
+	try {
+		const workspaces = await api.listWorkspaces()
+		for (const w of workspaces) {
+			if (!w.archived && w.name) {
+				activeWorkspaceNames.add(w.name)
+				if (w.branch) workspaceBranches.set(w.name, w.branch)
+			}
+		}
+	} catch {
+		log.warn('Could not fetch workspaces for dedup check')
+	}
+
 	// Step 2: Process each project
 	for (const project of projects) {
 		const projectName = project.path.split('/').pop() ?? project.path
@@ -59,12 +74,12 @@ export async function runCycle(
 
 			// Step 3: Classify backlog tasks
 			const classified = await classifyBacklogTasks(
-				api, projectConfig, config, rrState, statusMap,
+				api, projectConfig, config, rrState, statusMap, activeWorkspaceNames,
 			)
 
 			// Step 4: Start triage workspaces
 			const triaged = await startTriageWorkspaces(
-				api, projectConfig, config, rrState, statusMap,
+				api, projectConfig, config, rrState, statusMap, activeWorkspaceNames,
 			)
 
 			// Step 5: Saturday — check for weekly status reports
@@ -74,7 +89,7 @@ export async function runCycle(
 
 			// Step 6: Pick and start implementation tasks
 			const started = await pickAndStartTasks(
-				api, projectConfig, config, rrState, statusMap, tagMap,
+				api, projectConfig, config, rrState, statusMap, tagMap, workspaceBranches,
 			)
 
 			// Report only if something happened

@@ -128,6 +128,8 @@ export type Repo = {
 export type Workspace = {
 	id: string
 	name: string | null
+	branch: string | null
+	container_ref: string | null
 	archived: boolean
 	pinned: boolean
 	created_at: string
