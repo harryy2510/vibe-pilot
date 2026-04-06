@@ -241,7 +241,7 @@ Project ID: ${projectConfig.project_id}
 Target Branch: ${targetBranch}`
 
 		try {
-			await api.startWorkspace({
+			const { workspace } = await api.startWorkspace({
 				name: task.title,
 				repos: [{
 					repo_id: projectConfig.repo_id,
@@ -258,6 +258,16 @@ Target Branch: ${targetBranch}`
 				},
 				prompt,
 			})
+
+			// Link workspace to issue + move to In Progress
+			await api.linkWorkspaceToIssue(workspace.id, {
+				project_id: projectConfig.project_id,
+				issue_id: task.id,
+			})
+			const inProgressId = statusMap.get('in progress')
+			if (inProgressId) {
+				await api.updateIssue(task.id, { status_id: inProgressId })
+			}
 
 			started++
 		} catch (err) {
@@ -313,7 +323,7 @@ Issue ID: ${task.id}
 Project ID: ${projectConfig.project_id}`
 
 		try {
-			await api.startWorkspace({
+			const { workspace } = await api.startWorkspace({
 				name: `Triage: ${task.title}`,
 				repos: [{
 					repo_id: projectConfig.repo_id,
@@ -329,6 +339,11 @@ Project ID: ${projectConfig.project_id}`
 					permission_policy: 'AUTO',
 				},
 				prompt,
+			})
+
+			await api.linkWorkspaceToIssue(workspace.id, {
+				project_id: projectConfig.project_id,
+				issue_id: task.id,
 			})
 
 			started++

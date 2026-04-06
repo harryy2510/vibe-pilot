@@ -64,7 +64,7 @@ Issue ID: ${issue.id}
 Project ID: ${projectConfig.project_id}`
 
 		try {
-			await api.startWorkspace({
+			const { workspace } = await api.startWorkspace({
 				repos: [{
 					repo_id: projectConfig.repo_id,
 					target_branch: globalConfig.defaults.target_branch,
@@ -79,6 +79,11 @@ Project ID: ${projectConfig.project_id}`
 					permission_policy: 'AUTO',
 				},
 				prompt,
+			})
+
+			await api.linkWorkspaceToIssue(workspace.id, {
+				project_id: projectConfig.project_id,
+				issue_id: issue.id,
 			})
 
 			started++

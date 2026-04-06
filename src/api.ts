@@ -250,6 +250,13 @@ export class VkApi {
 		return this.request('POST', '/api/workspaces/start', body)
 	}
 
+	async linkWorkspaceToIssue(workspaceId: string, body: {
+		project_id: string
+		issue_id: string
+	}): Promise<void> {
+		await this.request('POST', `/api/workspaces/${workspaceId}/links`, body)
+	}
+
 	async getWorkspaceRepos(workspaceId: string): Promise<Array<{ repo_id: string; target_branch: string }>> {
 		return this.request('GET', `/api/workspaces/${workspaceId}/repos`)
 	}

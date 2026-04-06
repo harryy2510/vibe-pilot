@@ -94,18 +94,28 @@ async function main() {
 	})
 	if (!orgId) return printSummary()
 
-	// ── 2. Create project ──
+	// ── 2. Clean up old test-project if exists, then create fresh ──
 	console.log('\n2. Create project')
 	let projectId = ''
 	let projectCreated = false
+
+	// Delete existing test-project to start fresh
+	const { projects: existingProjects } = await localReq<{ projects: Array<{ id: string; name: string }> }>('GET', `/api/remote/projects?organization_id=${orgId}`)
+	const oldProject = existingProjects.find(p => p.name.toLowerCase() === 'test-project')
+	if (oldProject) {
+		console.log('  Cleaning up old test-project...')
+		await remoteReq('DELETE', `/v1/projects/${oldProject.id}`).catch(() => {})
+	}
+
+	// Delete old repo registration
+	const oldRepos = await localReq<Array<{ id: string; path: string }>>('GET', '/api/repos')
+	const oldRepo = oldRepos.find(r => r.path === TEST_PROJECT_PATH)
+	if (oldRepo) {
+		console.log('  Cleaning up old repo registration...')
+		await localReq('DELETE', `/api/repos/${oldRepo.id}`).catch(() => {})
+	}
+
 	await test('POST /v1/projects', async () => {
-		// Check if exists first
-		const { projects } = await localReq<{ projects: Array<{ id: string; name: string }> }>('GET', `/api/remote/projects?organization_id=${orgId}`)
-		const existing = projects.find(p => p.name.toLowerCase() === 'test-project')
-		if (existing) {
-			projectId = existing.id
-			return { id: projectId, existed: true }
-		}
 
 		const result = await remoteReq<{ data: { id: string; name: string } }>('POST', '/v1/projects', {
 			organization_id: orgId,
@@ -313,14 +323,27 @@ agent: Senior Developer
 				console.log('  Archiving workspace...')
 				await localReq('PUT', `/api/workspaces/${workspaceId}`, { archived: true }).catch(() => {})
 			})
-			return {
-				workspaceId,
-				executionId: result.execution_process.id,
-				status: result.execution_process.status,
+			return { workspaceId, status: result.execution_process.status }
 			}
 		})
 
 		if (workspaceId) {
+			await test('POST /api/workspaces/{id}/links (link to issue)', async () => {
+				await localReq('POST', `/api/workspaces/${workspaceId}/links`, {
+					project_id: projectId,
+					issue_id: issueId,
+				})
+				return { linked: true }
+			})
+
+			await test('PATCH issue → In Progress', async () => {
+				const inProgressId = statusMap['in progress']
+				if (!inProgressId) throw new Error('No "In Progress" status')
+				return await localReq('PATCH', `/api/remote/issues/${issueId}`, {
+					status_id: inProgressId,
+				})
+			})
+
 			await test('GET /api/workspaces/{id} (verify)', async () => {
 				return await localReq<{ id: string; name: string }>('GET', `/api/workspaces/${workspaceId}`)
 			})
