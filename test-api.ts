@@ -106,6 +106,20 @@ async function main() {
 		return await localReq<{ id: string; name: string }>('GET', `/api/remote/projects/${projectId}`)
 	})
 
+	let testProjectId = ''
+	await test('POST /v1/projects (remote — create)', async () => {
+		const data = await remoteReq<{ data: { id: string; name: string } }>('POST', '/v1/projects', {
+			organization_id: orgId,
+			name: '_vp_test_project',
+			color: '210 80% 55%',
+		})
+		testProjectId = data.data.id
+		cleanup.push(async () => {
+			await remoteReq('DELETE', `/v1/projects/${testProjectId}`).catch(() => {})
+		})
+		return { id: testProjectId }
+	})
+
 	// ── 4. Project Statuses ──
 	console.log('\nProject Statuses')
 	const statusMap: Record<string, string> = {}
@@ -273,6 +287,38 @@ async function main() {
 		const data = await localReq<Array<{ id: string; path: string }>>('GET', '/api/repos')
 		return { count: data.length, paths: data.slice(0, 3).map(r => r.path) }
 	})
+
+	// Test register + update with a real repo path on the server
+	let testRepoId = ''
+	const testRepoPath = '/tmp/_vp_test_repo'
+	await test('POST /api/repos (register repo)', async () => {
+		// Create a temp git repo to register
+		await fetch(`${LOCAL}/api/repos/init`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ parent_path: '/tmp', folder_name: '_vp_test_repo' }),
+		}).catch(() => {})
+
+		const data = await localReq<{ id: string; path: string }>('POST', '/api/repos', {
+			path: testRepoPath,
+			display_name: '_vp_test_repo',
+		})
+		testRepoId = data.id
+		cleanup.push(async () => {
+			await localReq('DELETE', `/api/repos/${testRepoId}`).catch(() => {})
+		})
+		return { id: testRepoId, path: data.path }
+	})
+
+	if (testRepoId) {
+		await test('PUT /api/repos/{id} (update scripts)', async () => {
+			return await localReq<{ id: string }>('PUT', `/api/repos/${testRepoId}`, {
+				setup_script: 'bun vibe-setup',
+				cleanup_script: 'bun vibe-cleanup',
+				dev_server_script: 'bun vibe-dev',
+			})
+		})
+	}
 
 	// ── 10. Workspaces (local) ──
 	console.log('\nWorkspaces')

@@ -105,6 +105,14 @@ export class VkApi {
 		return this.request('GET', `/api/remote/projects/${projectId}`)
 	}
 
+	async createProject(body: {
+		organization_id: string
+		name: string
+		color: string
+	}): Promise<MutationResponse<Project>> {
+		return this.remoteRequest('POST', '/v1/projects', body)
+	}
+
 	// -- Project Statuses --
 
 	async listProjectStatuses(projectId: string): Promise<{ project_statuses: ProjectStatus[] }> {

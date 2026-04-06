@@ -32,8 +32,19 @@ export async function setupProject(
 	)
 
 	if (!vkProject) {
-		log.info(`Project "${projectName}" not found in vibe-kanban, skipping auto-create (create via UI)`)
-		return null
+		log.info(`Creating project "${projectName}" in vibe-kanban`)
+		try {
+			const result = await api.createProject({
+				organization_id: config.org_id,
+				name: projectName,
+				color: '210 80% 55%',
+			})
+			vkProject = result.data
+			log.info(`Created project: ${vkProject.name}`, { id: vkProject.id })
+		} catch (err) {
+			log.error(`Failed to create project "${projectName}"`, { error: String(err) })
+			return null
+		}
 	}
 
 	// Step 2: Find or register repo
