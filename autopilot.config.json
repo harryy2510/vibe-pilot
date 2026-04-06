@@ -1,0 +1,37 @@
+{
+  "workspace": "/Users/harryy/Desktop",
+  "vk_api": "http://localhost:4040",
+  "org_id": "REPLACE_WITH_ORG_ID",
+  "scan_depth": 1,
+  "interval": 60,
+  "defaults": {
+    "concurrency": 3,
+    "stack_prs": true,
+    "dev_script": "bun vibe-dev",
+    "setup_script": "bun vibe-setup",
+    "cleanup_script": "bun vibe-cleanup",
+    "target_branch": "main",
+    "copy_files": [".env.keys"],
+    "tags": [
+      "migration", "brainstorm", "blocked", "bug",
+      "feature", "enhancement", "frontend", "backend", "setup"
+    ]
+  },
+  "models": {
+    "high": [
+      { "executor": "CLAUDE_CODE", "model": "opus" },
+      { "executor": "GEMINI", "model": "gemini-3.1-pro-preview" },
+      { "executor": "CODEX", "model": "gpt-5.4" }
+    ],
+    "medium": [
+      { "executor": "CLAUDE_CODE", "model": "sonnet" },
+      { "executor": "GEMINI", "model": "gemini-3-pro-preview" },
+      { "executor": "CODEX", "model": "gpt-5.2-codex" }
+    ],
+    "low": [
+      { "executor": "CLAUDE_CODE", "model": "haiku" },
+      { "executor": "GEMINI", "model": "gemini-3-flash-preview" },
+      { "executor": "CODEX", "model": "gpt-5.4-fast" }
+    ]
+  }
+}
