@@ -7,7 +7,7 @@
     Code does code work. AI does AI work.
   </p>
   <p align="center">
-    <code>11 modules</code> · <code>5 skills</code> · <code>3 model tiers</code> · <code>1 dependency</code>
+    <code>11 modules</code> · <code>4 skills</code> · <code>3 commands</code> · <code>3 model tiers</code> · <code>1 dependency</code>
   </p>
 </p>
 
@@ -145,17 +145,37 @@ The autopilot fetches active workspaces once per cycle. If a workspace is alread
 
 ---
 
-## Skills
+## Plugin
+
+Skills and commands are distributed as a Claude Code plugin via the
+[claude-toolkit](https://github.com/harryy2510/claude-toolkit) marketplace.
+
+```bash
+# Install the plugin
+claude plugin marketplace add harryy2510/claude-toolkit
+claude plugin install claude-toolkit@vibe-pilot
+```
+
+### Skills
 
 Loaded into AI workspaces. Each skill is a focused instruction set.
 
-| Skill | Tier | What happens |
+| Skill | Tier | User-invocable | What happens |
+|---|---|---|---|
+| `classify` | Low | No | Haiku reads task, decides simple->To Do or complex->Triage |
+| `triage` | High | No | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
+| `implement` | Medium | No | Agent writes code, runs tests, creates PR, links to issue |
+| `status-report` | High | No | Technical Writer generates weekly HTML report from git + board data |
+
+### Commands
+
+Slash commands that invoke skills directly.
+
+| Command | Skill | Description |
 |---|---|---|
-| `classify` | Low | Haiku reads task, decides simple->To Do or complex->Triage |
-| `triage` | High | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
-| `implement` | Medium | Agent writes code, runs tests, creates PR, links to issue |
-| `status-report` | High | Technical Writer generates weekly HTML report from git + board data |
-| `model-agent-ref` | -- | Lookup table mapping tiers to specialist agents |
+| `/classify` | classify | Classify a backlog task as simple or complex |
+| `/triage` | triage | Break down a complex task into subtasks |
+| `/status-report` | status-report | Generate a weekly status report |
 
 ---
 
@@ -177,12 +197,19 @@ vibe-pilot/
 │   └── logger.ts          Structured logger with timestamps
 ├── scripts/
 │   └── clean.ts           Full reset -- delete all projects, repos, workspaces
-├── skills/                AI workspace instruction sets
-│   ├── classify.md
-│   ├── triage.md
-│   ├── implement.md
-│   ├── status-report.md
-│   └── model-agent-ref.md
+├── plugins/               Claude Code plugin (distributable skills + commands)
+│   └── vibe-pilot/
+│       ├── .claude-plugin/
+│       │   └── plugin.json
+│       ├── skills/
+│       │   ├── classify/
+│       │   ├── triage/
+│       │   ├── implement/
+│       │   └── status-report/
+│       └── commands/
+│           ├── classify.md
+│           ├── triage.md
+│           └── status-report.md
 ├── autopilot.config.sample.json  Sample config (copy to autopilot.config.json)
 ├── oxfile.sample.toml            Sample oxfile config (copy to oxfile.toml)
 ├── test-api.ts                   25-test E2E suite against live vibe-kanban
@@ -209,7 +236,11 @@ cp oxfile.sample.toml oxfile.toml
 # Edit oxfile.toml:
 #   - Set VK_SHARED_API_BASE / VK_SHARED_RELAY_API_BASE to your server URLs
 
-# 3. Run with oxfile (recommended)
+# 3. Install the Claude Code plugin (optional -- for workspace skills)
+claude plugin marketplace add harryy2510/claude-toolkit
+claude plugin install claude-toolkit@vibe-pilot
+
+# 4. Run with oxfile (recommended)
 ox start                              # starts vibe-kanban + autopilot
 
 # Or run directly
