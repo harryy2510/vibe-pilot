@@ -1,6 +1,7 @@
 ---
 name: status-report
 description: Generate a weekly client-ready status report. Gathers git commits, kanban tasks, PR descriptions, and module progress to fill an HTML template. Creates the template if it doesn't exist.
+user_invocable: true
 ---
 
 # Weekly Status Report

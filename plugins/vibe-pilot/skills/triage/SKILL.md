@@ -1,6 +1,7 @@
 ---
 name: triage
 description: Brainstorm with the user to understand a complex task, then break it down into actionable To Do tasks with specs, tags, and model/agent assignments.
+user_invocable: true
 ---
 
 # Triage Task

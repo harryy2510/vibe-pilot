@@ -1,6 +1,7 @@
 ---
 name: classify
 description: Classify a backlog task as simple or complex. Assigns tags, model tier, and agent type. Used by the autopilot cron.
+user_invocable: true
 ---
 
 # Classify Task

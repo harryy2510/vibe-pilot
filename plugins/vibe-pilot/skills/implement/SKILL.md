@@ -1,6 +1,7 @@
 ---
 name: implement
 description: Implement a task from the To Do board. Write code, create PR, and link it to the issue. The PR triggers automatic transition to In Review.
+user_invocable: false
 ---
 
 # Implement Task
