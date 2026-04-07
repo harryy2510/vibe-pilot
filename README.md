@@ -162,10 +162,10 @@ Loaded into AI workspaces. Each skill is a focused instruction set.
 
 | Skill | Tier | User-invocable | What happens |
 |---|---|---|---|
-| `classify` | Low | Yes | Haiku reads task, decides simple->To Do or complex->Triage |
-| `triage` | High | Yes | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
-| `implement` | Medium | No | Agent writes code, runs tests, creates PR, links to issue |
-| `status-report` | High | Yes | Technical Writer generates weekly HTML report from git + board data |
+| `vibe-pilot:classify` | Low | Yes | Haiku reads task, decides simple->To Do or complex->Triage |
+| `vibe-pilot:triage` | High | Yes | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
+| `vibe-pilot:implement` | Medium | No | Agent writes code, runs tests, creates PR, links to issue |
+| `vibe-pilot:status-report` | High | Yes | Technical Writer generates weekly HTML report from git + board data |
 
 ### Commands
 
@@ -173,9 +173,9 @@ Slash commands that invoke skills directly.
 
 | Command | Skill | Description |
 |---|---|---|
-| `/classify` | classify | Classify a backlog task as simple or complex |
-| `/triage` | triage | Break down a complex task into subtasks |
-| `/status-report` | status-report | Generate a weekly status report |
+| `/vibe-pilot:classify` | vibe-pilot:classify | Classify a backlog task as simple or complex |
+| `/vibe-pilot:triage` | vibe-pilot:triage | Break down a complex task into subtasks |
+| `/vibe-pilot:status-report` | vibe-pilot:status-report | Generate a weekly status report |
 
 ---
 

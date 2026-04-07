@@ -3,4 +3,4 @@ description: Classify a backlog task as simple (To Do) or complex (Triage). Assi
 argument-hint: <issue-id>
 ---
 
-Follow the classify skill for the given task.
+Follow the vibe-pilot:classify skill for the given task.

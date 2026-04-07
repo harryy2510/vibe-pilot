@@ -145,12 +145,12 @@ Four skills moved from `skills/*.md` to `plugins/vibe-pilot/skills/*/SKILL.md` (
 
 | Skill | Source | User-invocable |
 |---|---|---|
-| `classify` | `skills/classify.md` -> `plugins/vibe-pilot/skills/classify/SKILL.md` | Yes |
-| `triage` | `skills/triage.md` -> `plugins/vibe-pilot/skills/triage/SKILL.md` | Yes |
-| `implement` | `skills/implement.md` -> `plugins/vibe-pilot/skills/implement/SKILL.md` | No |
-| `status-report` | `skills/status-report.md` -> `plugins/vibe-pilot/skills/status-report/SKILL.md` | Yes |
+| `vibe-pilot:classify` | `skills/classify.md` -> `plugins/vibe-pilot/skills/classify/SKILL.md` | Yes |
+| `vibe-pilot:triage` | `skills/triage.md` -> `plugins/vibe-pilot/skills/triage/SKILL.md` | Yes |
+| `vibe-pilot:implement` | `skills/implement.md` -> `plugins/vibe-pilot/skills/implement/SKILL.md` | No |
+| `vibe-pilot:status-report` | `skills/status-report.md` -> `plugins/vibe-pilot/skills/status-report/SKILL.md` | Yes |
 
-**Why implement is in the plugin but not user-invocable:** The daemon's picker.ts prompt says `"Follow the implement skill"` — the workspace needs this skill available via the globally installed plugin. But it's not useful to invoke manually, so `user_invocable: false`.
+**Why implement is in the plugin but not user-invocable:** The daemon's picker.ts prompt says `"Follow the vibe-pilot:implement skill"` — the workspace needs this skill available via the globally installed plugin. But it's not useful to invoke manually, so `user_invocable: false`.
 
 Skills NOT included in the plugin:
 - `model-agent-ref.md` — reference table, not a skill; content is already embedded in classify and triage skills. Deleted from the repo.
@@ -161,9 +161,9 @@ Three slash commands — thin wrappers that invoke the corresponding skill:
 
 | Command | Purpose |
 |---|---|
-| `/classify` | Manually classify a backlog task |
-| `/triage` | Manually triage a complex task |
-| `/status-report` | Generate a weekly status report on demand |
+| `/vibe-pilot:classify` | Manually classify a backlog task |
+| `/vibe-pilot:triage` | Manually triage a complex task |
+| `/vibe-pilot:status-report` | Generate a weekly status report on demand |
 
 Command format follows dotclaude's pattern (frontmatter + instruction).
 
@@ -173,7 +173,7 @@ Command format follows dotclaude's pattern (frontmatter + instruction).
 - Add "Plugin" section explaining the distributable skills and commands
 - Add install instructions referencing `claude-toolkit@vibe-pilot`
 - Update project structure diagram to show `plugins/` directory instead of `skills/`
-- Note that `implement` and `model-agent-ref` are no longer standalone files
+- Note that `vibe-pilot:implement` and `model-agent-ref` are no longer standalone files
 
 ---
 
@@ -183,7 +183,7 @@ Command format follows dotclaude's pattern (frontmatter + instruction).
 - `autopilot.config.sample.json`, `oxfile.sample.toml`, `test-api.ts` unchanged
 - `vibe-kanban.json` unchanged
 - `package.json` unchanged
-- The daemon's workspace prompts (e.g. `"Follow the classify skill"`) work because the plugin is installed globally via `claude plugin install claude-toolkit@vibe-pilot`
+- The daemon's workspace prompts (e.g. `"Follow the vibe-pilot:classify skill"`) work because the plugin is installed globally via `claude plugin install claude-toolkit@vibe-pilot`
 
 ---
 

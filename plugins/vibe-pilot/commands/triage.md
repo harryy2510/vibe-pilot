@@ -3,4 +3,4 @@ description: Triage a complex task — brainstorm with user, break into actionab
 argument-hint: <issue-id>
 ---
 
-Follow the triage skill for the given task.
+Follow the vibe-pilot:triage skill for the given task.

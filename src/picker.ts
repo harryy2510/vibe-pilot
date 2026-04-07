@@ -235,7 +235,7 @@ export async function pickAndStartTasks(
 			stacked: baseBranch !== null,
 		})
 
-		const prompt = `You are the ${agent}. Follow the implement skill.
+		const prompt = `You are the ${agent}. Follow the vibe-pilot:implement skill.
 
 Task: ${task.title}
 ${task.description ? `\nDescription:\n${task.description}` : ''}
@@ -326,7 +326,7 @@ export async function startTriageWorkspaces(
 			model,
 		})
 
-		const prompt = `You are triaging a task. Follow the triage skill.
+		const prompt = `You are triaging a task. Follow the vibe-pilot:triage skill.
 
 Task: ${task.title}
 ${task.description ? `\nDescription:\n${task.description}` : ''}

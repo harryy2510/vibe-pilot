@@ -49,7 +49,7 @@ export async function classifyBacklogTasks(
 			model,
 		})
 
-		const prompt = `You are classifying a backlog task. Follow the classify skill.
+		const prompt = `You are classifying a backlog task. Follow the vibe-pilot:classify skill.
 
 Task: ${issue.title}
 ${issue.description ? `\nDescription:\n${issue.description}` : ''}

@@ -39,7 +39,7 @@ Backlog → Triage → To Do → In Progress → In Review → Done
 
 ### Backlog → Triage / To Do
 
-User creates a task. It lands in Backlog. The cron starts a Haiku workspace with the `classify` skill.
+User creates a task. It lands in Backlog. The cron starts a Haiku workspace with the `vibe-pilot:classify` skill.
 
 Haiku reads title + description and decides:
 - **Simple** — adds tags, embeds model tier + agent type in description, moves to To Do
@@ -47,12 +47,12 @@ Haiku reads title + description and decides:
 
 ### Triage → To Do
 
-The cron starts an Opus workspace linked to the Triage issue. The user opens the workspace in vibe-kanban UI and chats with Opus directly. Opus uses the `triage` skill:
+The cron starts an Opus workspace linked to the Triage issue. The user opens the workspace in vibe-kanban UI and chats with Opus directly. Opus uses the `vibe-pilot:triage` skill:
 
 - Asks questions, understands scope
 - Breaks down into To Do tasks (meaningful chunks, 10-20 files per PR, not micro-tasks)
 - Each created task gets: tags, `blocked_by` relationships, model tier + agent type in description
-- References `model-agent-ref` skill for assignment decisions
+- References `model-agent-ref` table for assignment decisions
 
 Triage workspaces do NOT count against concurrency — they're interactive, mostly idle, waiting on the user.
 
@@ -66,7 +66,7 @@ The cron picks tasks based on:
 4. Skip tasks whose `blocked_by` dependencies aren't resolved (behavior depends on `stack_prs`)
 5. Read model tier + agent type from task description
 6. Pick executor + model from the config pool (round-robin)
-7. Start workspace via HTTP API with prompt referencing the `implement` skill
+7. Start workspace via HTTP API with prompt referencing the `vibe-pilot:implement` skill
 
 **The cron never re-sorts the board.** Board order is controlled entirely by the user via drag-and-drop in the vibe-kanban UI. Dragging a task to the top means it gets picked next.
 
@@ -161,16 +161,16 @@ The cron creates everything via HTTP API (pure code, no AI):
 
 Four skill files, loaded by the AI executor (not injected into prompts):
 
-### `classify.md` — Backlog Sorting
+### `vibe-pilot:classify` — Backlog Sorting
 
 - **Loaded by:** low-tier model (Haiku or equivalent)
 - **Input:** backlog task
 - **Decision:** simple or complex
 - **If simple:** add tags, embed model tier + agent type in task description, move to To Do
 - **If complex:** move to Triage
-- **References:** `model-agent-ref.md` for tier/agent assignment
+- **References:** `model-agent-ref` for tier/agent assignment
 
-### `triage.md` — Brainstorm & Breakdown
+### `vibe-pilot:triage` — Brainstorm & Breakdown
 
 - **Loaded by:** high-tier model (Opus or equivalent)
 - **Input:** Triage task
@@ -182,9 +182,9 @@ Four skill files, loaded by the AI executor (not injected into prompts):
   - Model tier + agent type embedded in description
 - **Constraint:** tasks must be meaningful chunks (10-20 files per PR)
 - **Priority:** triage sets the priority field (urgent/high/medium/low) and inserts tasks into To Do in priority order. After creation, board order is fully user-controlled — the cron never re-sorts.
-- **References:** `model-agent-ref.md` for tier/agent assignment
+- **References:** `model-agent-ref` for tier/agent assignment
 
-### `implement.md` — Code & PR
+### `vibe-pilot:implement` — Code & PR
 
 - **Loaded by:** assigned model (from task description)
 - **Input:** To Do task with spec, tags, model/agent already decided
@@ -194,9 +194,9 @@ Four skill files, loaded by the AI executor (not injected into prompts):
   2. Link PR to issue via vibe-kanban MCP
   3. Vibe-kanban moves to In Review automatically
 
-### `model-agent-ref.md` — Lookup Table
+### `model-agent-ref` — Lookup Table
 
-Not a standalone skill. Referenced by `classify` and `triage` to decide:
+Not a standalone skill. Referenced by `vibe-pilot:classify` and `vibe-pilot:triage` to decide:
 - Task characteristics → tier (low / medium / high)
 - Task type → agent type (Frontend Developer, Database Optimizer, Backend Architect, etc.)
 
@@ -204,7 +204,7 @@ Maps to the installed agent types available in the system.
 
 ## Sub-Agent Driven Execution
 
-Implementation tasks are not generic "write code" jobs. Each task is routed to a specialized agent type based on what the work requires. The classify and triage skills assign the agent type, and the `implement` skill's prompt tells the AI which agent persona to adopt.
+Implementation tasks are not generic "write code" jobs. Each task is routed to a specialized agent type based on what the work requires. The classify and triage skills assign the agent type, and the `vibe-pilot:implement` skill's prompt tells the AI which agent persona to adopt.
 
 ### Available Agent Types
 
@@ -236,7 +236,7 @@ These map to the specialized agents installed in the system:
    -->
    ```
 3. The cron reads the agent type when starting the workspace
-4. The workspace prompt includes: "You are the {agent_type}. Follow the implement skill."
+4. The workspace prompt includes: "You are the {agent_type}. Follow the vibe-pilot:implement skill."
 5. The AI adopts the agent persona — its system prompt, expertise, and focus areas match the work
 
 ### Why Sub-Agents Matter

@@ -13,7 +13,7 @@ Every Saturday, vibe-pilot creates a vibe-kanban task per project tagged `status
 2. For each project: template exists at `docs/status-update-template.html`?
    - Yes: create "Status Update — {date}" task, tag `status-update`
    - No: create "Setup status report template" task, tags `status-update` + `setup`
-3. Task gets picked up by normal autopilot flow → Opus workspace with `status-report` skill
+3. Task gets picked up by normal autopilot flow → Opus workspace with `vibe-pilot:status-report` skill
 4. Skill gathers data, generates report, creates PR with dev link
 
 ## Data Sources

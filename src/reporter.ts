@@ -61,7 +61,7 @@ export async function checkAndCreateReportTasks(
 
 	if (hasTemplate) {
 		title = `Status Update — ${dateLong}`
-		description = `Follow the status-report skill.
+		description = `Follow the vibe-pilot:status-report skill.
 
 Generate the weekly status report for the week ending ${dateLong}.
 
@@ -81,7 +81,7 @@ agent: Technical Writer
 -->`
 	} else {
 		title = `Setup status report template — ${dateLong}`
-		description = `Follow the status-report skill.
+		description = `Follow the vibe-pilot:status-report skill.
 
 No status report template exists yet. Create one.
 
