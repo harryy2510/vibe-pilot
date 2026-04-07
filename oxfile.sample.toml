@@ -3,11 +3,11 @@ version = 1
 [defaults]
 restart_policy = "on_failure"
 max_restarts = 10
-stop_timeout_secs = 5
+stop_timeout_secs = 10
 
 [[apps]]
 name = "vibe-kanban"
-command = "bunx vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.41-20260403182044/vibe-kanban-0.1.41.tgz"
+command = "bash -c 'fuser -k 4040/tcp 2>/dev/null; sleep 1; exec bunx vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.41-20260403182044/vibe-kanban-0.1.41.tgz'"
 health_cmd = "curl -fsS http://localhost:4040"
 
 [apps.env]

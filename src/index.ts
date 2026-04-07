@@ -16,6 +16,14 @@ async function main() {
 		interval: config.interval,
 	})
 
+	// Graceful shutdown on SIGTERM/SIGINT
+	for (const sig of ['SIGTERM', 'SIGINT'] as const) {
+		process.on(sig, () => {
+			log.info(`Received ${sig}, shutting down`)
+			process.exit(0)
+		})
+	}
+
 	// Round-robin state persists across cycles
 	const rrState: RoundRobinState = { high: 0, medium: 0, low: 0 }
 
