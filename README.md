@@ -162,10 +162,10 @@ Loaded into AI workspaces. Each skill is a focused instruction set.
 
 | Skill | Tier | User-invocable | What happens |
 |---|---|---|---|
-| `classify` | Low | No | Haiku reads task, decides simple->To Do or complex->Triage |
-| `triage` | High | No | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
+| `classify` | Low | Yes | Haiku reads task, decides simple->To Do or complex->Triage |
+| `triage` | High | Yes | Opus brainstorms in workspace chat, breaks into subtasks with dependencies |
 | `implement` | Medium | No | Agent writes code, runs tests, creates PR, links to issue |
-| `status-report` | High | No | Technical Writer generates weekly HTML report from git + board data |
+| `status-report` | High | Yes | Technical Writer generates weekly HTML report from git + board data |
 
 ### Commands
 
