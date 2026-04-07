@@ -153,7 +153,7 @@ Skills and commands are distributed as a Claude Code plugin via the
 ```bash
 # Install the plugin
 claude plugin marketplace add harryy2510/claude-toolkit
-claude plugin install claude-toolkit@vibe-pilot
+claude plugin install vibe-pilot@claude-toolkit
 ```
 
 ### Skills
@@ -238,7 +238,7 @@ cp oxfile.sample.toml oxfile.toml
 
 # 3. Install the Claude Code plugin (optional -- for workspace skills)
 claude plugin marketplace add harryy2510/claude-toolkit
-claude plugin install claude-toolkit@vibe-pilot
+claude plugin install vibe-pilot@claude-toolkit
 
 # 4. Run with oxfile (recommended)
 ox start                              # starts vibe-kanban + autopilot
