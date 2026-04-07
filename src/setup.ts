@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import { kebabCase } from 'es-toolkit/string'
+import { kebabCase, startCase } from 'es-toolkit/string'
 import type { AutopilotConfig, DiscoveredProject, ProjectConfig, ProjectStatus } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
@@ -59,13 +59,14 @@ export async function setupProject(
 	project: DiscoveredProject,
 	config: AutopilotConfig,
 ): Promise<ProjectConfig | null> {
-	const projectName = basename(project.path)
+	const dirName = basename(project.path)
+	const projectName = startCase(dirName)
 	log.info(`Setting up project: ${projectName}`, { path: project.path })
 
 	// Step 1: Find or create project in vibe-kanban
 	const { projects } = await api.listProjects(config.org_id)
 	let vkProject = projects.find(
-		p => kebabCase(p.name) === kebabCase(projectName),
+		p => kebabCase(p.name) === kebabCase(dirName),
 	)
 
 	if (!vkProject) {
