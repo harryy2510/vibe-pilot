@@ -2,7 +2,7 @@ import type { AutopilotConfig, RoundRobinState } from './types'
 import type { VkApi } from './api'
 import { log } from './logger'
 import { discoverProjects, isConfigComplete } from './discover'
-import { fixIncompleteConfig, gitCommitAndPush } from './setup'
+import { fixIncompleteConfig, gitCommitAndPush, setupProject } from './setup'
 import { classifyBacklogTasks } from './classifier'
 import { pickAndStartTasks, startTriageWorkspaces } from './picker'
 import { checkAndCreateReportTasks } from './reporter'
@@ -61,8 +61,22 @@ export async function runCycle(
 			// Commit and push any uncommitted config files (vibe-kanban.json, package.json)
 			gitCommitAndPush(project.path, ['vibe-kanban.json', 'package.json'], 'chore: add vibe-kanban config')
 
+			// Verify project still exists — if deleted from board, re-create it
+			let statuses: Awaited<ReturnType<typeof api.listProjectStatuses>>['project_statuses']
+			try {
+				const result = await api.listProjectStatuses(projectConfig.project_id)
+				statuses = result.project_statuses
+			} catch {
+				log.warn(`Project deleted from board, re-creating: ${projectName}`)
+				projectConfig = await setupProject(api, project, config)
+				if (!projectConfig) {
+					log.info(`Skipping ${projectName} — could not re-create`)
+					continue
+				}
+				const result = await api.listProjectStatuses(projectConfig.project_id)
+				statuses = result.project_statuses
+			}
 			// Build status map for this project
-			const { project_statuses: statuses } = await api.listProjectStatuses(projectConfig.project_id)
 			const statusMap = new Map<string, string>()
 			for (const s of statuses) {
 				statusMap.set(s.name.toLowerCase(), s.id)
