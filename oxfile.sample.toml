@@ -3,16 +3,16 @@ version = 1
 [defaults]
 restart_policy = "on_failure"
 max_restarts = 10
-stop_timeout_secs = 10
+stop_timeout_secs = 5
 
 [[apps]]
 name = "vibe-kanban"
-command = "bash -c 'fuser -k 4040/tcp 2>/dev/null; sleep 1; exec bunx vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.41-20260403182044/vibe-kanban-0.1.41.tgz'"
+command = "bash -c 'fuser -k 4040/tcp 2>/dev/null; sleep 1; exec bunx -y @harryy/vibe-kanban@latest'"
 health_cmd = "curl -fsS http://localhost:4040"
 
 [apps.env]
-VK_SHARED_API_BASE = "https://your-server.example.com"
-VK_SHARED_RELAY_API_BASE = "https://your-relay.example.com"
+VK_SHARED_API_BASE = "https://api.vibepilot.org"
+VK_SHARED_RELAY_API_BASE = "https://relay.vibepilot.org"
 PORT = "4040"
 HOST = "0.0.0.0"
 

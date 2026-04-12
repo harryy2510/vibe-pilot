@@ -1,7 +1,7 @@
 {
   "workspace": "/path/to/your/projects",
   "vk_api": "http://localhost:4040",
-  "vk_shared_api_base": "https://your-server.example.com",
+  "vk_shared_api_base": "https://api.vibepilot.org",
   "org_id": "YOUR_ORG_ID",
   "scan_depth": 2,
   "interval": 60,
