@@ -3,7 +3,7 @@ import type { VkApi } from './api'
 import { log } from './logger'
 import { discoverProjects, isConfigComplete } from './discover'
 import { fixIncompleteConfig, gitCommitAndPush, setupProject } from './setup'
-import { classifyBacklogTasks } from './classifier'
+// import { classifyBacklogTasks } from './classifier'
 import { pickAndStartTasks, startTriageWorkspaces } from './picker'
 import { checkAndCreateReportTasks } from './reporter'
 
@@ -89,10 +89,10 @@ export async function runCycle(
 				tagMap.set(t.name.toLowerCase(), t.id)
 			}
 
-			// Step 3: Classify backlog tasks
-			const classified = await classifyBacklogTasks(
-				api, projectConfig, config, rrState, statusMap, activeWorkspaceNames,
-			)
+			// Step 3: Classify backlog tasks — DISABLED, handled manually
+			// const classified = await classifyBacklogTasks(
+			// 	api, projectConfig, config, rrState, statusMap, activeWorkspaceNames,
+			// )
 
 			// Step 4: Start triage workspaces
 			const triaged = await startTriageWorkspaces(
@@ -110,8 +110,8 @@ export async function runCycle(
 			)
 
 			// Report only if something happened
-			if (classified + triaged + started + reports > 0) {
-				log.info(`${projectName}: classified=${classified} triaged=${triaged} started=${started} reports=${reports}`)
+			if (triaged + started + reports > 0) {
+				log.info(`${projectName}: triaged=${triaged} started=${started} reports=${reports}`)
 			}
 		} catch (err) {
 			log.error(`Error processing ${projectName}`, { error: String(err) })
