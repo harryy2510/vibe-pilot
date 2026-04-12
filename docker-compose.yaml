@@ -23,6 +23,7 @@ services:
     container_name: vk-electric
     working_dir: /app
     restart: unless-stopped
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://electric_sync:${ELECTRIC_ROLE_PASSWORD}@remote-db:5432/remote?sslmode=disable
       PG_PROXY_PORT: 65432
@@ -48,9 +49,6 @@ services:
     depends_on:
       remote-db:
         condition: service_healthy
-    extra_hosts:
-      - ${RELAY_DOMAIN}:host-gateway
-      - ${CLIENT_DOMAIN}:host-gateway
     environment:
       RUST_LOG: info,remote=info
       SERVER_DATABASE_URL: postgres://remote:${DB_PASSWORD}@remote-db:5432/remote
@@ -68,12 +66,10 @@ services:
     image: ghcr.io/harryy2510/vibe-kanban/relay:latest
     container_name: vk-relay
     restart: unless-stopped
+    env_file: .env
     depends_on:
       remote-db:
         condition: service_healthy
-    extra_hosts:
-      - ${SERVER_DOMAIN}:host-gateway
-      - ${CLIENT_DOMAIN}:host-gateway
     environment:
       RUST_LOG: info
       SERVER_DATABASE_URL: postgres://remote:${DB_PASSWORD}@remote-db:5432/remote
@@ -86,37 +82,44 @@ services:
       retries: 10
       start_period: 30s
 
-  vibe-kanban:
-    image: node:24
-    container_name: vk-client
-    command: npx vibe-kanban@https://github.com/BloopAI/vibe-kanban/releases/download/v0.1.40-20260401153532/vibe-kanban-0.1.40.tgz
-    restart: on-failure:10
-    env_file: .env
-    depends_on:
-      remote-server:
-        condition: service_healthy
-    extra_hosts:
-      - ${SERVER_DOMAIN}:host-gateway
-      - ${RELAY_DOMAIN}:host-gateway
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: vk-azurite
+    restart: unless-stopped
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+      --location /data
+      --loose
+      --skipApiVersionCheck
+      --disableProductStyleUrl
     volumes:
-      - /home/ubuntu/workspace:/workspace
-      - /home/ubuntu/.ssh:/root/.ssh:ro
-      - vk-cache:/root/.npm
-      - vk-bin:/root/.vibe-kanban
-    environment:
-      VK_SHARED_API_BASE: https://${SERVER_DOMAIN}
-      VK_SHARED_RELAY_API_BASE: https://${RELAY_DOMAIN}
-      PORT: "4040"
-      HOST: 0.0.0.0
+      - azurite-data:/data
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4040').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "nc", "-z", "127.0.0.1", "10000"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 10s
+
+  azurite-init:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: vk-azurite-init
+    depends_on:
+      azurite:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: node
+    command:
+      - -e
+      - |
+        const http=require('http'),crypto=require('crypto');
+        const a='devstoreaccount1',k='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';
+        function req(method,path,body){return new Promise((ok)=>{const t=new Date().toUTCString(),l=body?Buffer.byteLength(body):0,ct=body?'application/xml':'';const fp='/'+a+path,parts=fp.split('?'),up=parts[0],qp=new URLSearchParams(parts[1]||'');let csh='';[...qp].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([k,v])=>csh+='\n'+k+':'+v);const s=method+'\n\n\n'+(l||'')+'\n\n'+ct+'\n\n\n\n\n\n\nx-ms-date:'+t+'\nx-ms-version:2020-10-02\n/'+a+up+csh;const sig=crypto.createHmac('sha256',Buffer.from(k,'base64')).update(s,'utf8').digest('base64');const h={'x-ms-version':'2020-10-02','x-ms-date':t,'Authorization':'SharedKey '+a+':'+sig};if(ct)h['Content-Type']=ct;if(l)h['Content-Length']=l;const r=http.request({hostname:'vk-azurite',port:10000,path:fp,method,headers:h},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>{console.log(method,path,res.statusCode);ok(res.statusCode)})});if(body)r.write(body);r.end()})};
+        (async()=>{await req('PUT','?restype=service&comp=properties','<?xml version="1.0" encoding="utf-8"?><StorageServiceProperties><Cors><CorsRule><AllowedOrigins>https://vibe.hariom.cc</AllowedOrigins><AllowedMethods>GET,PUT,HEAD,OPTIONS</AllowedMethods><AllowedHeaders>*</AllowedHeaders><ExposedHeaders>*</ExposedHeaders><MaxAgeInSeconds>86400</MaxAgeInSeconds></CorsRule></Cors></StorageServiceProperties>');await req('PUT','/issue-attachments?restype=container',null)})();
 
 volumes:
   remote-db-data:
   electric-data:
-  vk-cache:
-  vk-bin:
+  azurite-data:
