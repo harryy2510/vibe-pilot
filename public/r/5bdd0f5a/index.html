@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibe Pilot — Status Update #1</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --purple:#8B5CF6;
+    --purple-light:#A78BFA;
+    --purple-dark:#7C3AED;
+    --purple-bg:#F5F3FF;
+    --green:#10B981;
+    --amber:#F59E0B;
+    --red:#EF4444;
+    --slate-50:#F8FAFC;
+    --slate-100:#F1F5F9;
+    --slate-200:#E2E8F0;
+    --slate-300:#CBD5E1;
+    --slate-500:#64748B;
+    --slate-600:#475569;
+    --slate-700:#334155;
+    --slate-800:#1E293B;
+    --slate-900:#0F172A;
+    --font-sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:"JetBrains Mono","Fira Code",Consolas,monospace;
+  }
+  body{
+    font-family:var(--font-sans);
+    background:var(--slate-100);
+    color:var(--slate-800);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrapper{
+    max-width:680px;
+    margin:0 auto;
+    padding:24px 16px;
+  }
+
+  /* ── Hero ── */
+  .hero{
+    background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+    border-radius:16px;
+    padding:48px 32px;
+    text-align:center;
+    color:#fff;
+    margin-bottom:24px;
+  }
+  .hero-badge{
+    display:inline-block;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:20px;
+    padding:4px 14px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    margin-bottom:16px;
+  }
+  .hero h1{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .hero p{
+    font-size:15px;
+    opacity:.85;
+  }
+
+  /* ── Sections ── */
+  .section{
+    background:#fff;
+    border-radius:12px;
+    border:1px solid var(--slate-200);
+    padding:24px;
+    margin-bottom:16px;
+  }
+  .section-title{
+    font-size:14px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--slate-500);
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title .icon{
+    font-size:16px;
+  }
+
+  /* ── Overall progress ── */
+  .overall-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .overall-pct{
+    font-size:48px;
+    font-weight:800;
+    color:var(--purple);
+    line-height:1;
+  }
+  .overall-label{
+    font-size:14px;
+    color:var(--slate-500);
+    text-align:right;
+  }
+  .module-bar{
+    margin-bottom:12px;
+  }
+  .module-bar:last-child{
+    margin-bottom:0;
+  }
+  .module-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    font-weight:600;
+    color:var(--slate-700);
+    margin-bottom:4px;
+  }
+  .module-track{
+    height:8px;
+    background:var(--slate-100);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .module-fill{
+    height:100%;
+    border-radius:4px;
+    background:var(--purple);
+    transition:width .3s ease;
+  }
+
+  /* ── Cards ── */
+  .cards{
+    display:grid;
+    gap:12px;
+  }
+  .card{
+    background:var(--slate-50);
+    border:1px solid var(--slate-200);
+    border-radius:8px;
+    padding:16px;
+  }
+  .card-tag{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    padding:2px 8px;
+    border-radius:4px;
+    margin-bottom:8px;
+  }
+  .card-tag.feat{background:#DBEAFE;color:#1D4ED8}
+  .card-tag.fix{background:#FEE2E2;color:#DC2626}
+  .card-tag.refactor{background:#FEF3C7;color:#D97706}
+  .card-tag.docs{background:#D1FAE5;color:#059669}
+  .card-tag.chore{background:var(--slate-100);color:var(--slate-600)}
+  .card h3{
+    font-size:15px;
+    font-weight:600;
+    color:var(--slate-800);
+    margin-bottom:4px;
+  }
+  .card p{
+    font-size:13px;
+    color:var(--slate-500);
+    line-height:1.5;
+  }
+
+  /* ── Checklists ── */
+  .checklist{
+    list-style:none;
+  }
+  .checklist li{
+    font-size:14px;
+    padding:6px 0;
+    border-bottom:1px solid var(--slate-100);
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .checklist li:last-child{border-bottom:none}
+  .check{
+    flex-shrink:0;
+    width:18px;
+    height:18px;
+    border-radius:4px;
+    border:2px solid var(--slate-300);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:2px;
+  }
+  .check.done{
+    background:var(--green);
+    border-color:var(--green);
+    color:#fff;
+    font-size:11px;
+  }
+  .check.next{
+    border-color:var(--purple-light);
+  }
+
+  /* ── Tech notes / Blockers ── */
+  .note-box{
+    background:var(--slate-50);
+    border-left:3px solid var(--purple);
+    border-radius:0 6px 6px 0;
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--slate-600);
+    margin-bottom:8px;
+    font-family:var(--font-mono);
+    line-height:1.5;
+  }
+  .note-box:last-child{margin-bottom:0}
+  .blocker-box{
+    background:#FEF2F2;
+    border-left:3px solid var(--red);
+    border-radius:0 6px 6px 0;
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--slate-700);
+    margin-bottom:8px;
+  }
+  .blocker-box:last-child{margin-bottom:0}
+
+  /* ── Footer ── */
+  .footer{
+    text-align:center;
+    padding:24px 16px;
+    font-size:12px;
+    color:var(--slate-500);
+  }
+  .footer a{color:var(--purple);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+  .footer-brand{
+    font-weight:700;
+    color:var(--slate-700);
+    font-size:13px;
+    margin-bottom:4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">Status Update #1</div>
+    <h1>Vibe Pilot</h1>
+    <p>Week of April 7 &mdash; April 11, 2026</p>
+  </div>
+
+  <!-- Overall Progress -->
+  <div class="section">
+    <div class="section-title"><span class="icon">&#9632;</span> Overall Progress</div>
+    <div class="overall-row">
+      <div class="overall-pct">82%</div>
+      <div class="overall-label">project<br/>completion</div>
+    </div>
+    <div class="module-bar">
+      <div class="module-label"><span>Core Engine</span><span>90%</span></div>
+      <div class="module-track"><div class="module-fill" style="width:90%"></div></div>
+    </div>
+    <div class="module-bar">
+      <div class="module-label"><span>API Client</span><span>95%</span></div>
+      <div class="module-track"><div class="module-fill" style="width:95%"></div></div>
+    </div>
+    <div class="module-bar">
+      <div class="module-label"><span>Plugin System</span><span>80%</span></div>
+      <div class="module-track"><div class="module-fill" style="width:80%"></div></div>
+    </div>
+    <div class="module-bar">
+      <div class="module-label"><span>Reports</span><span>65%</span></div>
+      <div class="module-track"><div class="module-fill" style="width:65%"></div></div>
+    </div>
+    <div class="module-bar">
+      <div class="module-label"><span>Infrastructure</span><span>85%</span></div>
+      <div class="module-track"><div class="module-fill" style="width:85%"></div></div>
+    </div>
+  </div>
+
+  <!-- This Week -->
+  <div class="section">
+    <div class="section-title"><span class="icon">&#9733;</span> This Week</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-tag feat">Feature</div>
+        <h3>Claude Code plugin structure</h3>
+        <p>Migrated skills and commands into a distributable Claude Code plugin via the claude-toolkit marketplace. Skills are now installed with <code>claude plugin install</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag feat">Feature</div>
+        <h3>Workspace dedup &amp; stacked PRs</h3>
+        <p>Added workspace deduplication to prevent duplicate agents. Stacked PR branches now look up the blocker's working branch automatically.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag refactor">Refactor</div>
+        <h3>Config &amp; oxfile migration</h3>
+        <p>Migrated from ecosystem.toml back to oxfile.toml format. Replaced committed configs with sample files. Added model tier fallbacks.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag fix">Fix</div>
+        <h3>API client hardening</h3>
+        <p>Fixed auth token handling for remote API calls, corrected endpoint paths, unwrapped ApiResponse wrappers, and fixed sort_direction casing.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag docs">Docs</div>
+        <h3>Classify skill refinement</h3>
+        <p>Updated SKILL.md with explicit task classification rules and improved execution clarity for the Haiku classifier agent.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div class="section">
+    <div class="section-title"><span class="icon">&#10003;</span> Done</div>
+    <ul class="checklist">
+      <li><span class="check done">&#10003;</span>Claude Code plugin structure with 4 skills and 3 commands</li>
+      <li><span class="check done">&#10003;</span>Workspace deduplication and stacked PR branch lookup</li>
+      <li><span class="check done">&#10003;</span>Remote API auth with bearer token support</li>
+      <li><span class="check done">&#10003;</span>Project auto-recreation when deleted from board</li>
+      <li><span class="check done">&#10003;</span>vibe-kanban.json auto-commit on every cycle</li>
+      <li><span class="check done">&#10003;</span>Recursive project discovery with configurable scan depth</li>
+      <li><span class="check done">&#10003;</span>startCase display names for discovered projects</li>
+      <li><span class="check done">&#10003;</span>Namespaced all skill/command references to vibe-pilot:</li>
+      <li><span class="check done">&#10003;</span>README with architecture diagrams and full setup guide</li>
+      <li><span class="check done">&#10003;</span>25-test E2E suite against live vibe-kanban</li>
+    </ul>
+  </div>
+
+  <!-- Up Next -->
+  <div class="section">
+    <div class="section-title"><span class="icon">&#9654;</span> Up Next</div>
+    <ul class="checklist">
+      <li><span class="check next"></span>Status report template and first generated report</li>
+      <li><span class="check next"></span>Automated weekly report generation pipeline</li>
+      <li><span class="check next"></span>Triage skill refinement and subtask dependency wiring</li>
+      <li><span class="check next"></span>Multi-executor round-robin across Claude, Gemini, and Codex</li>
+      <li><span class="check next"></span>PR auto-retargeting when blocker merges</li>
+    </ul>
+  </div>
+
+  <!-- Technical Notes -->
+  <div class="section">
+    <div class="section-title"><span class="icon">&#9881;</span> Technical Notes</div>
+    <div class="note-box">The entire codebase (11 modules) was built from scratch this week. All core systems are operational: discovery, setup, classification, picking, and reporting.</div>
+    <div class="note-box">Plugin distribution uses the claude-toolkit marketplace pattern: `claude plugin marketplace add harryy2510/claude-toolkit` then `claude plugin install vibe-pilot@claude-toolkit`.</div>
+    <div class="note-box">Reporter runs on a Saturday cron check. If no template exists, it creates a setup task. If the template exists, it creates a fill-in task. Both are tagged `status-update`.</div>
+  </div>
+
+  <!-- No blockers this week -->
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">Vibe Pilot</div>
+    <p>Zero-touch kanban autopilot &mdash; April 2026</p>
+    <p style="margin-top:4px"><a href="https://github.com/harryy2510/vibe-pilot">github.com/harryy2510/vibe-pilot</a></p>
+  </div>
+
+</div>
+</body>
+</html>
