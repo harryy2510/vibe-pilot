@@ -1,0 +1,41 @@
+{
+  "name": "vibe-pilot",
+  "version": "1.0.0",
+  "description": "Kanban autopilot skills for task classification, triage, implementation, and status reports.",
+  "author": {
+    "name": "Hariom Sharma",
+    "email": "harryy2510@gmail.com",
+    "url": "https://github.com/harryy2510"
+  },
+  "homepage": "https://github.com/harryy2510/vibe-pilot",
+  "repository": "https://github.com/harryy2510/vibe-pilot",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "codex",
+    "claude",
+    "vibe-kanban",
+    "kanban",
+    "automation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Vibe Pilot",
+    "shortDescription": "Kanban autopilot skills for AI workspaces.",
+    "longDescription": "Vibe Pilot provides agent skills for classifying backlog work, triaging complex tasks, implementing selected work, and generating status reports for vibe-kanban projects.",
+    "developerName": "Hariom Sharma",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/harryy2510/vibe-pilot",
+    "defaultPrompt": [
+      "Classify this vibe-kanban backlog task.",
+      "Triage this complex task into dependencies.",
+      "Generate a status report for tracked projects."
+    ],
+    "brandColor": "#8B5CF6"
+  }
+}

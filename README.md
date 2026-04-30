@@ -147,13 +147,35 @@ The autopilot fetches active workspaces once per cycle. If a workspace is alread
 
 ## Plugin
 
-Skills and commands are distributed as a Claude Code plugin via the
-[claude-toolkit](https://github.com/harryy2510/claude-toolkit) marketplace.
+Skills are distributed with agent-agnostic metadata. Claude Code uses the
+[agent-toolkit](https://github.com/harryy2510/agent-toolkit) marketplace, and Codex-compatible metadata lives in `plugins/vibe-pilot/.codex-plugin/plugin.json`.
 
 ```bash
 # Install the plugin
-claude plugin marketplace add harryy2510/claude-toolkit
-claude plugin install vibe-pilot@claude-toolkit
+claude plugin marketplace add harryy2510/agent-toolkit
+claude plugin install vibe-pilot@agent-toolkit
+```
+
+Gemini CLI:
+
+```bash
+gemini extensions link plugins/vibe-pilot
+```
+
+Codex:
+
+```bash
+bunx @harryy/agent-toolkit setup --yes
+bunx @harryy/agent-toolkit repo migrate
+```
+
+Codex consumes `AGENTS.md` directly and can read the local plugin metadata at `plugins/vibe-pilot/.codex-plugin/plugin.json`.
+
+For repo-local agent sync:
+
+```bash
+agents sync --path .
+agents watch --path .
 ```
 
 ### Skills
@@ -197,10 +219,14 @@ vibe-pilot/
 │   └── logger.ts          Structured logger with timestamps
 ├── scripts/
 │   └── clean.ts           Full reset -- delete all projects, repos, workspaces
-├── plugins/               Claude Code plugin (distributable skills + commands)
+├── plugins/               Agent plugin (distributable skills + commands)
 │   └── vibe-pilot/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
+│       ├── .codex-plugin/
+│       │   └── plugin.json
+│       ├── gemini-extension.json
+│       ├── GEMINI.md
 │       ├── skills/
 │       │   ├── classify/
 │       │   ├── triage/
@@ -237,8 +263,18 @@ cp oxfile.sample.toml oxfile.toml
 #   - Set VK_SHARED_API_BASE / VK_SHARED_RELAY_API_BASE to your server URLs
 
 # 3. Install the Claude Code plugin (optional -- for workspace skills)
-claude plugin marketplace add harryy2510/claude-toolkit
-claude plugin install vibe-pilot@claude-toolkit
+claude plugin marketplace add harryy2510/agent-toolkit
+claude plugin install vibe-pilot@agent-toolkit
+
+# Optional Gemini extension link
+gemini extensions link plugins/vibe-pilot
+
+# Optional Codex/global rules setup
+bunx @harryy/agent-toolkit setup --yes
+bunx @harryy/agent-toolkit repo migrate
+
+# Optional local sync for AGENTS.md-aware tools
+agents sync --path .
 
 # 4. Run with oxfile (recommended)
 ox start                              # starts vibe-kanban + autopilot

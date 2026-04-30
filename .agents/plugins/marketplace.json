@@ -1,0 +1,20 @@
+{
+  "name": "vibe-pilot",
+  "interface": {
+    "displayName": "Vibe Pilot"
+  },
+  "plugins": [
+    {
+      "name": "vibe-pilot",
+      "source": {
+        "source": "local",
+        "path": "./plugins/vibe-pilot"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
