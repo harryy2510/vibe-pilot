@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI"
+  short_description: "Tailwind, shadcn, themes, variants, and UX review"
+  default_prompt: "Use $ui to build or review this interface work."

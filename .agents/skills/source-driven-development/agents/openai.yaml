@@ -1,0 +1,4 @@
+interface:
+  display_name: "Source-Driven Development"
+  short_description: "Official-docs-first implementation for framework-specific code"
+  default_prompt: "Use $source-driven-development to verify the current official pattern before implementing this framework change."

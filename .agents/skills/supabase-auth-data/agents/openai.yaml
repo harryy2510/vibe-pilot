@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase Auth Data"
+  short_description: "Supabase clients, auth, RLS, migrations, and types"
+  default_prompt: "Use $supabase-auth-data to review or implement this Supabase change."

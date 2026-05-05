@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conventions"
+  short_description: "Install repo conventions and deterministic checks"
+  default_prompt: "Use $conventions to add repo-level agent conventions and checks."

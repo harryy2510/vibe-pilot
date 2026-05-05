@@ -1,0 +1,4 @@
+interface:
+  display_name: "React Best Practices"
+  short_description: "React performance and composition guidance"
+  default_prompt: "Use $react-best-practices to review or refactor these React components."

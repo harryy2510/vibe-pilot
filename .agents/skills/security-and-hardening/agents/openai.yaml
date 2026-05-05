@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security And Hardening"
+  short_description: "Auth, input, secrets, permissions, and boundary review"
+  default_prompt: "Use $security-and-hardening to review this auth, input, or data-boundary change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentation And ADRs"
+  short_description: "Durable technical docs, decisions, runbooks, and API notes"
+  default_prompt: "Use $documentation-and-adrs to document this decision or workflow without adding planning noise."

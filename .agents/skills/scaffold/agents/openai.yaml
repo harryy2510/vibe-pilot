@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scaffold"
+  short_description: "Scaffold TanStack, Supabase, and Cloudflare apps"
+  default_prompt: "Use $scaffold to create a new full-stack TypeScript project."

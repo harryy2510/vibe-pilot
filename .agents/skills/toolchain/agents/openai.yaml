@@ -1,0 +1,4 @@
+interface:
+  display_name: "Toolchain"
+  short_description: "Bun, TypeScript, oxlint, oxfmt, hooks, and commits"
+  default_prompt: "Use $toolchain to update or verify the repo tooling path."

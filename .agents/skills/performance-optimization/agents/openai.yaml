@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Optimization"
+  short_description: "Measure-first speed, latency, query, bundle, and runtime work"
+  default_prompt: "Use $performance-optimization to measure and fix this slow path."

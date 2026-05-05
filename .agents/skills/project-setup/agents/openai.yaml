@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Setup"
+  short_description: "DX tooling, hooks, env workflow, and CI setup"
+  default_prompt: "Use $project-setup to set up project tooling, hooks, or CI."

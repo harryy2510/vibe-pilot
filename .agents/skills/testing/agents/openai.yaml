@@ -1,0 +1,4 @@
+interface:
+  display_name: "Testing"
+  short_description: "Vitest, Testing Library, and Playwright guidance"
+  default_prompt: "Use $testing to add or review the focused tests for this change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "shadcn"
+  short_description: "Add, compose, and debug shadcn UI components"
+  default_prompt: "Use $shadcn to add or fix shadcn/ui components in this project."

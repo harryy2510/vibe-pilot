@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vite"
+  short_description: "Vite config, plugins, SSR, env, and Rolldown"
+  default_prompt: "Use $vite to configure or review this Vite setup."

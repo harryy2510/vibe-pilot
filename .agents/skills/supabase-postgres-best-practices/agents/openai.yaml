@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase Postgres"
+  short_description: "Postgres query, schema, index, and RLS performance"
+  default_prompt: "Use $supabase-postgres-best-practices to tune this Postgres design."

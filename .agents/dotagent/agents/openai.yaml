@@ -1,0 +1,4 @@
+interface:
+  display_name: "DotAgent"
+  short_description: "Agent conventions, skills, and role-profile guidance"
+  default_prompt: "Use DotAgent guidance for this repo, and only treat role profiles as native agents when the current host exposes them."

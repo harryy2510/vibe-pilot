@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repo Intelligence"
+  short_description: "Read generated repo context before broad inspection"
+  default_prompt: "Use $repo-intelligence to find the right repo context before broad work."

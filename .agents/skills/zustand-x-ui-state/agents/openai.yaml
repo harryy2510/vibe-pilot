@@ -1,0 +1,4 @@
+interface:
+  display_name: "zustand-x UI State"
+  short_description: "Client UI state boundaries and zustand-x stores"
+  default_prompt: "Use $zustand-x-ui-state to model this client-side UI state."

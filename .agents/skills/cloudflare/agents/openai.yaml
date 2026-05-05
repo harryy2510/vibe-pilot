@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cloudflare"
+  short_description: "Workers, Wrangler, and Cloudflare deploy guidance"
+  default_prompt: "Use $cloudflare to review or implement Cloudflare Workers and Wrangler changes."

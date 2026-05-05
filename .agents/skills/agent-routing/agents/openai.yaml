@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Routing"
+  short_description: "Route work across available skills, role profiles, and native subagents"
+  default_prompt: "Use $agent-routing to decide whether available DotAgent role profiles, skills, or native subagents should handle this task."

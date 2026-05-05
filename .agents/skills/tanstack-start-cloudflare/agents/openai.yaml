@@ -1,0 +1,4 @@
+interface:
+  display_name: "TanStack Start Cloudflare"
+  short_description: "TanStack Start routes, server functions, and Workers"
+  default_prompt: "Use $tanstack-start-cloudflare to implement this TanStack Start change."

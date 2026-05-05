@@ -1,0 +1,4 @@
+interface:
+  display_name: "React Query Mutative"
+  short_description: "React Query mutations, keys, and optimistic updates"
+  default_prompt: "Use $react-query-mutative to implement or review this data mutation flow."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "API And Interface Design"
+  short_description: "Contracts, boundaries, errors, and compatibility"
+  default_prompt: "Use $api-and-interface-design to define the contract before implementing this API or boundary change."

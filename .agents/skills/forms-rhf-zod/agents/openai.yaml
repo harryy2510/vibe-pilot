@@ -1,0 +1,4 @@
+interface:
+  display_name: "Forms RHF Zod"
+  short_description: "React Hook Form and Zod form implementation"
+  default_prompt: "Use $forms-rhf-zod to build or review this form flow."
